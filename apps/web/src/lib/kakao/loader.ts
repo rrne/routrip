@@ -1,10 +1,4 @@
-type KakaoNamespace = {
-  maps: {
-    load: (callback: () => void) => void;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-};
+import type { KakaoNamespace } from './types';
 
 declare global {
   interface Window {
@@ -32,16 +26,17 @@ export function loadKakaoMaps(): Promise<KakaoNamespace> {
 
   loaderPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services,clusterer&autoload=false`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services,clusterer&autoload=false`;
     script.async = true;
     script.onload = () => {
       window.kakao!.maps.load(() => resolve(window.kakao!));
     };
-    script.onerror = () => reject(new Error('Kakao Maps SDK 로드 실패'));
+    script.onerror = () =>
+      reject(
+        new Error('Kakao Maps SDK 로드 실패. 도메인이 카카오 개발자 콘솔에 등록되었는지 확인하세요.'),
+      );
     document.head.appendChild(script);
   });
 
   return loaderPromise;
 }
-
-export {};
