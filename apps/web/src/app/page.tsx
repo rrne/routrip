@@ -1,12 +1,14 @@
-import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { CartDrawer } from '@/components/cart-drawer';
 import { KakaoMapView } from '@/components/kakao-map';
+import { SearchBar } from '@/components/search-bar';
 import { signoutAction } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function Home() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect('/login');
+  const user = data.user;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -15,18 +17,35 @@ export default async function Home() {
           <h1 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             routrip
           </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-500">{data.user.email}</p>
+          {user ? (
+            <p className="text-xs text-zinc-500 dark:text-zinc-500">{user.email}</p>
+          ) : (
+            <p className="text-xs text-zinc-500 dark:text-zinc-500">여행 일정 최적화</p>
+          )}
         </div>
-        <form action={signoutAction}>
-          <button
-            type="submit"
-            className="rounded-md px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+        {user ? (
+          <form action={signoutAction}>
+            <button
+              type="submit"
+              className="rounded-md px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+            >
+              로그아웃
+            </button>
+          </form>
+        ) : (
+          <Link
+            href="/login"
+            className="rounded-md px-3 py-1 text-xs font-medium text-zinc-900 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800"
           >
-            로그아웃
-          </button>
-        </form>
+            로그인
+          </Link>
+        )}
       </header>
-      <KakaoMapView className="flex-1" />
+      <SearchBar />
+      <div className="relative flex-1">
+        <KakaoMapView className="absolute inset-0" />
+        <CartDrawer />
+      </div>
     </div>
   );
 }
