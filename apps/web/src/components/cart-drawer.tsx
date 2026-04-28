@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useCart } from '@/lib/store/cart';
 
@@ -77,13 +78,22 @@ export function CartDrawer() {
                 >
                   비우기
                 </button>
-                <button
-                  type="button"
-                  disabled={count < 2}
-                  className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                >
-                  경로 계산하기
-                </button>
+                {count >= 2 ? (
+                  <Link
+                    href="/route"
+                    className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  >
+                    경로 계산하기
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex-1 cursor-not-allowed rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white opacity-40 dark:bg-zinc-50 dark:text-zinc-900"
+                  >
+                    경로 계산하기
+                  </button>
+                )}
               </div>
             </>
           )}
