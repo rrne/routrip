@@ -5,9 +5,14 @@ import { createClient } from '@/lib/supabase/server';
 
 type SearchParams = Promise<{ error?: string; message?: string; next?: string }>;
 
-const MESSAGES: Record<string, string> = {
-  signup_success: '가입 완료! 이메일 확인 후 로그인해주세요.',
-};
+// Supabase 영문 에러 메시지 → 한글
+function translateError(raw: string): string {
+  if (raw.includes('Email not confirmed'))
+    return '이메일 인증이 완료되지 않았어요. 가입 시 받은 메일에서 인증 링크를 클릭해주세요.';
+  if (raw.includes('Invalid login credentials'))
+    return '이메일 또는 비밀번호가 올바르지 않아요.';
+  return raw;
+}
 
 function safeNext(value: string | undefined): string {
   if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
@@ -60,14 +65,20 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
         </form>
 
         {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-            {error}
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-sm leading-relaxed text-red-700 dark:bg-red-950 dark:text-red-300">
+            {translateError(error)}
           </p>
         )}
-        {message && MESSAGES[message] && (
-          <p className="rounded-lg bg-green-50 px-3 py-2 text-center text-sm text-green-700 dark:bg-green-950 dark:text-green-300">
-            {MESSAGES[message]}
-          </p>
+        {message === 'signup_success' && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm leading-relaxed text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+            <p className="font-semibold">📧 가입 완료! 이메일을 확인해주세요</p>
+            <p className="mt-2">
+              방금 입력한 이메일로 인증 메일을 보냈어요. 메일 안의 <strong>"Confirm your mail"</strong> 링크를 클릭하면 로그인할 수 있습니다.
+            </p>
+            <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-400">
+              메일이 안 보이면 스팸함도 확인해보세요. 몇 분 내로 도착하지 않으면 입력한 이메일이 정확한지 다시 확인해주세요.
+            </p>
+          </div>
         )}
 
         <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
