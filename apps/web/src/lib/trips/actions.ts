@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import type { Spot } from '@routrip/shared';
-import { optimizeRoute } from '@/lib/route/optimize';
+import { buildRoute } from '@/lib/route/optimize';
 import { createClient } from '@/lib/supabase/server';
 
 type SaveTripInput = {
@@ -21,8 +21,8 @@ export async function saveTripAction(
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return { ok: false, error: '로그인이 필요합니다.' };
 
-  // 서버에서 다시 최적화 — client 결과를 신뢰하지 않고 결정론적으로 재계산.
-  const route = optimizeRoute(input.spots);
+  // 사용자가 정한 순서를 그대로 저장 — 거리만 다시 계산해서 신뢰 (client 값 미신뢰).
+  const route = buildRoute(input.spots);
 
   // 1) spots upsert (kakao_place_id 기준 dedup, 없으면 신규)
   const spotRows = route.spots.map((s) => ({

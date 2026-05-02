@@ -76,23 +76,29 @@ function twoOpt(spots: Spot[]): Spot[] {
   return best;
 }
 
+// 주어진 순서 그대로 받아서 구간/총거리만 계산. 순서는 절대 바꾸지 않음.
+export function buildRoute(spots: Spot[]): OptimizedRoute {
+  if (spots.length === 0) {
+    return { spots: [], legs: [], totalDistanceMeters: 0 };
+  }
+  const legs = spots.slice(0, -1).map((from, i) => ({
+    from,
+    to: spots[i + 1],
+    distanceMeters: haversineMeters(from.location, spots[i + 1].location),
+  }));
+  return {
+    spots,
+    legs,
+    totalDistanceMeters: legs.reduce((sum, leg) => sum + leg.distanceMeters, 0),
+  };
+}
+
+// NN + 2-opt로 자동 최적화. 사용자가 "자동 정렬" 누를 때 사용.
 export function optimizeRoute(spots: Spot[], startSpotId?: string): OptimizedRoute {
   if (spots.length === 0) {
     return { spots: [], legs: [], totalDistanceMeters: 0 };
   }
-
   const startIndex = startSpotId ? Math.max(0, spots.findIndex((s) => s.id === startSpotId)) : 0;
   const ordered = twoOpt(nearestNeighbor(spots, startIndex));
-
-  const legs = ordered.slice(0, -1).map((from, i) => ({
-    from,
-    to: ordered[i + 1],
-    distanceMeters: haversineMeters(from.location, ordered[i + 1].location),
-  }));
-
-  return {
-    spots: ordered,
-    legs,
-    totalDistanceMeters: legs.reduce((sum, leg) => sum + leg.distanceMeters, 0),
-  };
+  return buildRoute(ordered);
 }

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { optimizeRoute } from '@/lib/route/optimize';
+import { buildRoute, optimizeRoute } from '@/lib/route/optimize';
 import { useCart } from '@/lib/store/cart';
 import { saveTripAction } from '@/lib/trips/actions';
 
@@ -28,11 +28,14 @@ function defaultTripName(): string {
 export function RouteView({ user }: Props) {
   const router = useRouter();
   const items = useCart((s) => s.items);
+  const move = useCart((s) => s.move);
+  const setItems = useCart((s) => s.setItems);
   const clearCart = useCart((s) => s.clear);
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  const route = useMemo(() => (items.length >= 2 ? optimizeRoute(items) : null), [items]);
+  // 사용자가 cart에서 정한 순서를 그대로 사용. 거리만 계산.
+  const route = useMemo(() => (items.length >= 2 ? buildRoute(items) : null), [items]);
 
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState('');
@@ -43,6 +46,12 @@ export function RouteView({ user }: Props) {
     setName(defaultTripName());
     setError(null);
     setNaming(true);
+  };
+
+  const handleAutoSort = () => {
+    if (items.length < 2) return;
+    const optimized = optimizeRoute(items);
+    setItems(optimized.spots);
   };
 
   const handleSave = () => {
@@ -76,9 +85,18 @@ export function RouteView({ user }: Props) {
         >
           ←
         </Link>
-        <h1 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          최적 경로
+        <h1 className="flex-1 text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          여행 경로
         </h1>
+        {route && (
+          <button
+            type="button"
+            onClick={handleAutoSort}
+            className="rounded-md px-2 py-1 text-xs font-medium text-zinc-900 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800"
+          >
+            자동 정렬
+          </button>
+        )}
       </header>
 
       {!route ? (
@@ -110,7 +128,7 @@ export function RouteView({ user }: Props) {
               const leg = route.legs[idx];
               return (
                 <li key={spot.id}>
-                  <div className="flex items-start gap-3 py-3">
+                  <div className="flex items-center gap-2 py-3">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white dark:bg-zinc-50 dark:text-zinc-900">
                       {idx + 1}
                     </span>
@@ -121,6 +139,26 @@ export function RouteView({ user }: Props) {
                       <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
                         {spot.address}
                       </p>
+                    </div>
+                    <div className="flex shrink-0 items-center">
+                      <button
+                        type="button"
+                        onClick={() => move(spot.id, 'up')}
+                        disabled={idx === 0}
+                        aria-label={`${spot.name} 위로`}
+                        className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => move(spot.id, 'down')}
+                        disabled={idx === route.spots.length - 1}
+                        aria-label={`${spot.name} 아래로`}
+                        className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                      >
+                        ↓
+                      </button>
                     </div>
                   </div>
                   {leg && (

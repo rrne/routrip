@@ -8,6 +8,7 @@ export function CartDrawer() {
   const items = useCart((s) => s.items);
   const remove = useCart((s) => s.remove);
   const clear = useCart((s) => s.clear);
+  const move = useCart((s) => s.move);
 
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -47,7 +48,7 @@ export function CartDrawer() {
             <>
               <ul className="divide-y divide-zinc-100 dark:divide-zinc-900">
                 {items.map((spot, idx) => (
-                  <li key={spot.id} className="flex items-center gap-3 px-4 py-3">
+                  <li key={spot.id} className="flex items-center gap-2 px-4 py-3">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
                       {idx + 1}
                     </span>
@@ -59,14 +60,34 @@ export function CartDrawer() {
                         {spot.address}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => remove(spot.id)}
-                      className="shrink-0 rounded-md p-1 text-xs text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
-                      aria-label={`${spot.name} 제거`}
-                    >
-                      ✕
-                    </button>
+                    <div className="flex shrink-0 items-center">
+                      <button
+                        type="button"
+                        onClick={() => move(spot.id, 'up')}
+                        disabled={idx === 0}
+                        aria-label={`${spot.name} 위로`}
+                        className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => move(spot.id, 'down')}
+                        disabled={idx === items.length - 1}
+                        aria-label={`${spot.name} 아래로`}
+                        className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => remove(spot.id)}
+                        aria-label={`${spot.name} 제거`}
+                        className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { LatLng } from '@routrip/shared';
 import { loadKakaoMaps } from '@/lib/kakao/loader';
-import type { KakaoMap } from '@/lib/kakao/types';
+import type { KakaoMap, KakaoMarker } from '@/lib/kakao/types';
+import { useCart } from '@/lib/store/cart';
 
 type Props = {
   center?: LatLng;
@@ -16,7 +17,12 @@ const SEOUL: LatLng = { lat: 37.5665, lng: 126.978 };
 export function KakaoMapView({ center = SEOUL, level = 4, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<KakaoMap | null>(null);
+  const markersRef = useRef<Map<string, KakaoMarker>>(new Map());
+  const prevCountRef = useRef(0);
+  const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const items = useCart((s) => s.items);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,6 +34,7 @@ export function KakaoMapView({ center = SEOUL, level = 4, className }: Props) {
           center: new kakao.maps.LatLng(center.lat, center.lng),
           level,
         });
+        setMapReady(true);
       })
       .catch((e: unknown) => {
         if (cancelled) return;
@@ -52,6 +59,57 @@ export function KakaoMapView({ center = SEOUL, level = 4, className }: Props) {
     if (!map) return;
     map.setLevel(level);
   }, [level]);
+
+  // cart 동기화 — 추가/제거된 spot에 따라 마커 add/remove + 추가 시에만 bounds 자동 맞춤
+  useEffect(() => {
+    if (!mapReady) return;
+    const map = mapRef.current;
+    const kakao = window.kakao;
+    if (!map || !kakao) return;
+
+    const markers = markersRef.current;
+    const currentIds = new Set(items.map((i) => i.id));
+
+    // 1) cart에서 빠진 마커 제거
+    for (const [id, marker] of markers) {
+      if (!currentIds.has(id)) {
+        marker.setMap(null);
+        markers.delete(id);
+      }
+    }
+
+    // 2) 새로 담긴 spot에 마커 추가
+    for (const item of items) {
+      if (!markers.has(item.id)) {
+        const marker = new kakao.maps.Marker({
+          position: new kakao.maps.LatLng(item.location.lat, item.location.lng),
+          map,
+          title: item.name,
+        });
+        markers.set(item.id, marker);
+      }
+    }
+
+    // 3) 항목이 늘어났을 때만 자동으로 bounds 맞춤 (제거/유저 panning은 건드리지 않음)
+    if (items.length > prevCountRef.current && items.length >= 1) {
+      const bounds = new kakao.maps.LatLngBounds();
+      for (const item of items) {
+        bounds.extend(new kakao.maps.LatLng(item.location.lat, item.location.lng));
+      }
+      // padding으로 마커가 가장자리에 붙지 않도록
+      map.setBounds(bounds, 60, 40, 80, 40);
+    }
+    prevCountRef.current = items.length;
+  }, [items, mapReady]);
+
+  // 언마운트 시 마커 정리
+  useEffect(() => {
+    const markers = markersRef.current;
+    return () => {
+      for (const marker of markers.values()) marker.setMap(null);
+      markers.clear();
+    };
+  }, []);
 
   if (error) {
     return (

@@ -13,12 +13,22 @@ export type KakaoMapOptions = {
   level: number;
 };
 
+export type KakaoLatLngBounds = {
+  extend(latlng: KakaoLatLng): void;
+  isEmpty(): boolean;
+  getSouthWest(): KakaoLatLng;
+  getNorthEast(): KakaoLatLng;
+};
+
+export type KakaoLatLngBoundsConstructor = new () => KakaoLatLngBounds;
+
 export type KakaoMap = {
   setCenter(latlng: KakaoLatLng): void;
   setLevel(level: number): void;
   getCenter(): KakaoLatLng;
   getLevel(): number;
   relayout(): void;
+  setBounds(bounds: KakaoLatLngBounds, paddingTop?: number, paddingRight?: number, paddingBottom?: number, paddingLeft?: number): void;
 };
 
 export type KakaoMapConstructor = new (container: HTMLElement, options: KakaoMapOptions) => KakaoMap;
@@ -84,6 +94,7 @@ export type KakaoMapsNamespace = {
   load(callback: () => void): void;
   Map: KakaoMapConstructor;
   LatLng: KakaoLatLngConstructor;
+  LatLngBounds: KakaoLatLngBoundsConstructor;
   Marker: KakaoMarkerConstructor;
   services: KakaoServicesNamespace;
 };
