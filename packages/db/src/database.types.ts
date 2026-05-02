@@ -144,9 +144,89 @@ export type Database = {
           },
         ];
       };
+      trip_collaborators: {
+        Row: {
+          trip_id: string;
+          user_id: string;
+          role: 'owner' | 'editor';
+          invited_by: string | null;
+          joined_at: string;
+        };
+        Insert: {
+          trip_id: string;
+          user_id: string;
+          role?: 'owner' | 'editor';
+          invited_by?: string | null;
+          joined_at?: string;
+        };
+        Update: {
+          trip_id?: string;
+          user_id?: string;
+          role?: 'owner' | 'editor';
+          invited_by?: string | null;
+          joined_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'trip_collaborators_trip_id_fkey';
+            columns: ['trip_id'];
+            referencedRelation: 'trips';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      trip_invites: {
+        Row: {
+          id: string;
+          trip_id: string;
+          token: string;
+          created_by: string;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          token: string;
+          created_by: string;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          token?: string;
+          created_by?: string;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'trip_invites_trip_id_fkey';
+            columns: ['trip_id'];
+            referencedRelation: 'trips';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      accept_invite: {
+        Args: { p_token: string };
+        Returns:
+          | { ok: true; trip_id: string }
+          | { ok: false; error: string };
+      };
+      is_trip_member: {
+        Args: { p_trip_id: string };
+        Returns: boolean;
+      };
+      is_trip_owner: {
+        Args: { p_trip_id: string };
+        Returns: boolean;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
