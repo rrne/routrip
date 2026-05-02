@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { EmailInput } from '@/components/email-input';
 import { signupAction } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -23,9 +24,8 @@ export default async function SignupPage({ searchParams }: { searchParams: Searc
         </div>
 
         <form action={signupAction} className="flex flex-col gap-3">
-          <input
+          <EmailInput
             name="email"
-            type="email"
             required
             autoComplete="email"
             placeholder="이메일"
