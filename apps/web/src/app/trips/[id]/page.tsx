@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { ShareSheet } from '@/components/share-sheet';
 import { createClient } from '@/lib/supabase/server';
 
 type Params = Promise<{ id: string }>;
@@ -25,36 +26,47 @@ export default async function TripDetailPage({ params }: { params: Params }) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) redirect(`/login?next=/trips/${id}`);
 
-  const { data, error } = await supabase
-    .from('trips')
-    .select(
-      `
-      id,
-      name,
-      total_distance_meters,
-      created_at,
-      trip_spots (
-        position,
-        spots (
-          id,
-          name,
-          address,
-          category,
-          lat,
-          lng
+  const [tripResult, membersResult] = await Promise.all([
+    supabase
+      .from('trips')
+      .select(
+        `
+        id,
+        name,
+        user_id,
+        total_distance_meters,
+        created_at,
+        trip_spots (
+          position,
+          spots (
+            id,
+            name,
+            address,
+            category,
+            lat,
+            lng
+          )
         )
+      `,
       )
-    `,
-    )
-    .eq('id', id)
-    .single();
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('trip_collaborators')
+      .select('user_id, role')
+      .eq('trip_id', id),
+  ]);
 
+  const { data, error } = tripResult;
   if (error || !data) notFound();
 
   const orderedSpots = [...data.trip_spots]
     .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
     .map((ts) => ts.spots)
     .filter((s): s is NonNullable<typeof s> => s !== null);
+
+  const members = membersResult.data ?? [];
+  const isOwner = data.user_id === userData.user.id;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -70,8 +82,17 @@ export default async function TripDetailPage({ params }: { params: Params }) {
           <h1 className="truncate text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             {data.name}
           </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-500">{formatDate(data.created_at)}</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-500">
+            {formatDate(data.created_at)}
+            {members.length > 1 && ` · 함께 ${members.length}명`}
+          </p>
         </div>
+        <ShareSheet
+          tripId={data.id}
+          currentUserId={userData.user.id}
+          isOwner={isOwner}
+          members={members}
+        />
       </header>
 
       <section className="border-b border-zinc-200 px-4 py-5 text-center dark:border-zinc-800">
