@@ -36,11 +36,56 @@ export type KakaoMarker = {
 
 export type KakaoMarkerConstructor = new (options: KakaoMarkerOptions) => KakaoMarker;
 
+// services 라이브러리 — keywordSearch (장소 검색)
+export type KakaoPlacesDoc = {
+  id: string;
+  place_name: string;
+  category_name: string;
+  category_group_code: string;
+  category_group_name: string;
+  address_name: string;
+  road_address_name: string;
+  phone: string;
+  place_url: string;
+  x: string;
+  y: string;
+};
+
+export type KakaoPlacesPagination = {
+  current: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  last: number;
+  totalCount: number;
+};
+
+export type KakaoServiceStatus = 'OK' | 'ZERO_RESULT' | 'ERROR';
+
+export type KakaoPlaces = {
+  keywordSearch(
+    keyword: string,
+    callback: (
+      data: KakaoPlacesDoc[],
+      status: KakaoServiceStatus,
+      pagination: KakaoPlacesPagination,
+    ) => void,
+    options?: { size?: number; page?: number },
+  ): void;
+};
+
+export type KakaoPlacesConstructor = new () => KakaoPlaces;
+
+export type KakaoServicesNamespace = {
+  Places: KakaoPlacesConstructor;
+  Status: { OK: 'OK'; ZERO_RESULT: 'ZERO_RESULT'; ERROR: 'ERROR' };
+};
+
 export type KakaoMapsNamespace = {
   load(callback: () => void): void;
   Map: KakaoMapConstructor;
   LatLng: KakaoLatLngConstructor;
   Marker: KakaoMarkerConstructor;
+  services: KakaoServicesNamespace;
 };
 
 export type KakaoNamespace = {

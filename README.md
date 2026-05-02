@@ -57,8 +57,7 @@ pnpm dev
 | `NEXT_PUBLIC_SUPABASE_URL` | [Supabase Dashboard](https://app.supabase.com) → Project Settings → API | 클라이언트/서버 |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 같은 곳 | 클라이언트/서버 |
 | `SUPABASE_SERVICE_ROLE_KEY` | 같은 곳 (절대 클라이언트 노출 금지) | 서버 전용 |
-| `NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY` | [Kakao Developers](https://developers.kakao.com/console/app) → 앱 → 앱 설정 → 앱 키 | 클라이언트 (지도 SDK) |
-| `KAKAO_REST_API_KEY` | 같은 곳 | 서버 (장소 검색) |
+| `NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY` | [Kakao Developers](https://developers.kakao.com/console/app) → 앱 → 앱 설정 → 앱 키 | 클라이언트 (지도 SDK + Local 검색) |
 
 ## DB 스키마 적용
 
