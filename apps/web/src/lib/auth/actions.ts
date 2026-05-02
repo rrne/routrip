@@ -4,22 +4,32 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
-function withError(path: string, message: string): never {
-  redirect(`${path}?error=${encodeURIComponent(message)}`);
+function withError(path: string, message: string, next?: string): never {
+  const params = new URLSearchParams({ error: message });
+  if (next) params.set('next', next);
+  redirect(`${path}?${params.toString()}`);
+}
+
+// open-redirect 방지: 같은 사이트의 path만 허용
+function safeNext(value: FormDataEntryValue | null): string {
+  const v = String(value ?? '');
+  return v.startsWith('/') && !v.startsWith('//') ? v : '/';
 }
 
 export async function loginAction(formData: FormData): Promise<void> {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
+  const next = safeNext(formData.get('next'));
 
-  if (!email || !password) withError('/login', '이메일과 비밀번호를 모두 입력해주세요.');
+  if (!email || !password)
+    withError('/login', '이메일과 비밀번호를 모두 입력해주세요.', next === '/' ? undefined : next);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) withError('/login', error.message);
+  if (error) withError('/login', error.message, next === '/' ? undefined : next);
 
   revalidatePath('/', 'layout');
-  redirect('/');
+  redirect(next);
 }
 
 export async function signupAction(formData: FormData): Promise<void> {

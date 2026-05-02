@@ -3,18 +3,25 @@ import { redirect } from 'next/navigation';
 import { loginAction } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/server';
 
-type SearchParams = Promise<{ error?: string; message?: string }>;
+type SearchParams = Promise<{ error?: string; message?: string; next?: string }>;
 
 const MESSAGES: Record<string, string> = {
   signup_success: '가입 완료! 이메일 확인 후 로그인해주세요.',
 };
 
+function safeNext(value: string | undefined): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
+  return value;
+}
+
 export default async function LoginPage({ searchParams }: { searchParams: SearchParams }) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  if (data.user) redirect('/');
+  const params = await searchParams;
+  const next = safeNext(params.next);
+  if (data.user) redirect(next);
 
-  const { error, message } = await searchParams;
+  const { error, message } = params;
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-6 py-12">
@@ -27,6 +34,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
         </div>
 
         <form action={loginAction} className="flex flex-col gap-3">
+          {next !== '/' && <input type="hidden" name="next" value={next} />}
           <input
             name="email"
             type="email"

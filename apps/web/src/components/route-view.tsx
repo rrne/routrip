@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { optimizeRoute } from '@/lib/route/optimize';
 import { useCart } from '@/lib/store/cart';
+import { saveTripAction } from '@/lib/trips/actions';
 
 type Props = {
   user: User | null;
@@ -15,12 +17,46 @@ function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)}km`;
 }
 
+function defaultTripName(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd} 여행`;
+}
+
 export function RouteView({ user }: Props) {
+  const router = useRouter();
   const items = useCart((s) => s.items);
+  const clearCart = useCart((s) => s.clear);
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
   const route = useMemo(() => (items.length >= 2 ? optimizeRoute(items) : null), [items]);
+
+  const [naming, setNaming] = useState(false);
+  const [name, setName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const startNaming = () => {
+    setName(defaultTripName());
+    setError(null);
+    setNaming(true);
+  };
+
+  const handleSave = () => {
+    setError(null);
+    startTransition(async () => {
+      const result = await saveTripAction({ name, spots: items });
+      if (result.ok) {
+        clearCart();
+        router.push(`/trips/${result.tripId}`);
+      } else {
+        setError(result.error);
+      }
+    });
+  };
 
   if (!hydrated) {
     return (
@@ -98,29 +134,66 @@ export function RouteView({ user }: Props) {
             })}
           </ol>
 
-          <div className="flex gap-2 border-t border-zinc-200 px-4 py-3 dark:border-zinc-800">
-            <Link
-              href="/"
-              className="flex-1 rounded-lg border border-zinc-300 px-4 py-2.5 text-center text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              처음으로
-            </Link>
-            {user ? (
-              <button
-                type="button"
-                disabled
-                title="저장 기능 준비 중"
-                className="flex-1 cursor-not-allowed rounded-lg bg-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500"
-              >
-                저장하기 (준비중)
-              </button>
+          <div className="border-t border-zinc-200 dark:border-zinc-800">
+            {error && (
+              <p className="border-b border-red-200 bg-red-50 px-4 py-2 text-center text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+                {error}
+              </p>
+            )}
+            {user && naming ? (
+              <div className="flex flex-col gap-2 px-4 py-3">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="여행 이름"
+                  autoFocus
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNaming(false)}
+                    disabled={isPending}
+                    className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={isPending || !name.trim()}
+                    className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  >
+                    {isPending ? '저장 중…' : '저장 확인'}
+                  </button>
+                </div>
+              </div>
             ) : (
-              <Link
-                href="/login?next=/route"
-                className="flex-1 rounded-lg bg-zinc-900 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              >
-                로그인하고 저장
-              </Link>
+              <div className="flex gap-2 px-4 py-3">
+                <Link
+                  href="/"
+                  className="flex-1 rounded-lg border border-zinc-300 px-4 py-2.5 text-center text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                >
+                  처음으로
+                </Link>
+                {user ? (
+                  <button
+                    type="button"
+                    onClick={startNaming}
+                    className="flex-1 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  >
+                    저장하기
+                  </button>
+                ) : (
+                  <Link
+                    href="/login?next=/route"
+                    className="flex-1 rounded-lg bg-zinc-900 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  >
+                    로그인하고 저장
+                  </Link>
+                )}
+              </div>
             )}
           </div>
         </>
