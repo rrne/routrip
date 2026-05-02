@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { setSessionMarker } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
@@ -10,6 +11,8 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // 이메일 인증/OAuth 완료 시점에도 60일 자동로그인 윈도우 시작
+      await setSessionMarker();
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

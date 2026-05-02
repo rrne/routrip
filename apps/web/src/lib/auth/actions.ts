@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { setSessionMarker, clearSessionMarker } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 
 function withError(path: string, message: string, next?: string): never {
@@ -28,6 +29,7 @@ export async function loginAction(formData: FormData): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) withError('/login', error.message, next === '/' ? undefined : next);
 
+  await setSessionMarker();
   revalidatePath('/', 'layout');
   redirect(next);
 }
@@ -51,6 +53,7 @@ export async function signupAction(formData: FormData): Promise<void> {
 export async function signoutAction(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  await clearSessionMarker();
   revalidatePath('/', 'layout');
   redirect('/login');
 }
