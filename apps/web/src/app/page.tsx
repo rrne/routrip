@@ -24,14 +24,22 @@ export default async function Home() {
           )}
         </div>
         {user ? (
-          <form action={signoutAction}>
-            <button
-              type="submit"
-              className="rounded-md px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+          <div className="flex items-center gap-1">
+            <Link
+              href="/trips"
+              className="rounded-md px-2 py-1 text-xs font-medium text-zinc-900 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800"
             >
-              로그아웃
-            </button>
-          </form>
+              내 여행
+            </Link>
+            <form action={signoutAction}>
+              <button
+                type="submit"
+                className="rounded-md px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+              >
+                로그아웃
+              </button>
+            </form>
+          </div>
         ) : (
           <Link
             href="/login"
