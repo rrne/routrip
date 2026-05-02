@@ -56,6 +56,15 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
             placeholder="비밀번호"
             className="rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
           />
+          <label className="flex items-center gap-2 px-1 text-sm text-zinc-700 dark:text-zinc-300">
+            <input
+              type="checkbox"
+              name="remember"
+              defaultChecked
+              className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900"
+            />
+            자동 로그인 (60일)
+          </label>
           <button
             type="submit"
             className="mt-1 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"

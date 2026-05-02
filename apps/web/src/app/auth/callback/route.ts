@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // 이메일 인증/OAuth 완료 시점에도 60일 자동로그인 윈도우 시작
-      await setSessionMarker();
+      // 이메일 인증/OAuth 완료 시점에는 기본 persistent (60일) 윈도우.
+      await setSessionMarker(true);
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

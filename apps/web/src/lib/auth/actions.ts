@@ -21,6 +21,7 @@ export async function loginAction(formData: FormData): Promise<void> {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
   const next = safeNext(formData.get('next'));
+  const remember = formData.get('remember') === 'on';
 
   if (!email || !password)
     withError('/login', '이메일과 비밀번호를 모두 입력해주세요.', next === '/' ? undefined : next);
@@ -29,7 +30,7 @@ export async function loginAction(formData: FormData): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) withError('/login', error.message, next === '/' ? undefined : next);
 
-  await setSessionMarker();
+  await setSessionMarker(remember);
   revalidatePath('/', 'layout');
   redirect(next);
 }

@@ -6,10 +6,12 @@ import { cookies } from 'next/headers';
 export const SESSION_MARKER_COOKIE = 'routrip_login_at';
 export const SESSION_MAX_AGE_SECONDS = 60 * 24 * 60 * 60; // 60일
 
-export async function setSessionMarker(): Promise<void> {
+// persistent=true 면 60일 maxAge 쿠키 (브라우저 닫아도 유지),
+// persistent=false 면 session 쿠키 (브라우저 닫으면 사라짐 → 다음 방문에 자동 로그아웃).
+export async function setSessionMarker(persistent: boolean): Promise<void> {
   const store = await cookies();
   store.set(SESSION_MARKER_COOKIE, String(Date.now()), {
-    maxAge: SESSION_MAX_AGE_SECONDS,
+    ...(persistent ? { maxAge: SESSION_MAX_AGE_SECONDS } : {}),
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
