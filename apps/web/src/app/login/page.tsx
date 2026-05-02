@@ -63,7 +63,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
               defaultChecked
               className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900"
             />
-            자동 로그인 (60일)
+            자동 로그인
           </label>
           <button
             type="submit"
