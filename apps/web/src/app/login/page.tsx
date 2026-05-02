@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { OAuthButtons } from '@/components/oauth-buttons';
 import { loginAction } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -32,14 +31,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
             routrip
           </h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">로그인해서 일정을 짜보세요</p>
-        </div>
-
-        <OAuthButtons next={next} />
-
-        <div className="flex items-center gap-3 text-xs text-zinc-400 dark:text-zinc-600">
-          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
-          <span>또는 이메일</span>
-          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
         </div>
 
         <form action={loginAction} className="flex flex-col gap-3">

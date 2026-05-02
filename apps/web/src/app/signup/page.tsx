@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { OAuthButtons } from '@/components/oauth-buttons';
 import { signupAction } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -21,14 +20,6 @@ export default async function SignupPage({ searchParams }: { searchParams: Searc
             회원가입
           </h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">routrip 시작하기</p>
-        </div>
-
-        <OAuthButtons />
-
-        <div className="flex items-center gap-3 text-xs text-zinc-400 dark:text-zinc-600">
-          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
-          <span>또는 이메일</span>
-          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
         </div>
 
         <form action={signupAction} className="flex flex-col gap-3">
