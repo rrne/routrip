@@ -30,7 +30,16 @@ export async function searchKakaoPlaces(query: string, page = 1): Promise<Spot[]
     next: { revalidate: 60 },
   });
 
-  if (!res.ok) throw new Error(`Kakao 장소 검색 실패: ${res.status}`);
+  if (!res.ok) {
+    let detail = `${res.status}`;
+    try {
+      const errBody = (await res.json()) as { errorType?: string; message?: string };
+      if (errBody.message) detail = `${res.status} ${errBody.errorType ?? ''} ${errBody.message}`.trim();
+    } catch {
+      // 본문이 JSON이 아닌 경우 status만
+    }
+    throw new Error(`Kakao 장소 검색 실패: ${detail}`);
+  }
 
   const data: KakaoLocalResponse = await res.json();
 

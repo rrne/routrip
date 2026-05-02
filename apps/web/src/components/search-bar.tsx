@@ -8,6 +8,7 @@ import { useCart } from '@/lib/store/cart';
 export function SearchBar() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Spot[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [, startTransition] = useTransition();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -21,12 +22,19 @@ export function SearchBar() {
     const q = query.trim();
     if (!q) {
       setResults([]);
+      setError(null);
       return;
     }
     const handle = setTimeout(() => {
       startTransition(async () => {
-        const places = await searchPlaces(q);
-        setResults(places);
+        const result = await searchPlaces(q);
+        if (result.ok) {
+          setResults(result.spots);
+          setError(null);
+        } else {
+          setResults([]);
+          setError(result.error);
+        }
       });
     }, 200);
     return () => clearTimeout(handle);
@@ -102,7 +110,13 @@ export function SearchBar() {
           </ul>
         </div>
       )}
-      {open && query.trim() && results.length === 0 && (
+      {open && query.trim() && error && (
+        <div className="absolute left-0 right-0 top-full z-20 border-b border-red-200 bg-red-50 px-4 py-3 text-xs leading-relaxed text-red-700 shadow-md dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+          <p className="font-medium">검색 실패</p>
+          <p className="mt-1 break-all">{error}</p>
+        </div>
+      )}
+      {open && query.trim() && !error && results.length === 0 && (
         <div className="absolute left-0 right-0 top-full z-20 border-b border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-500 shadow-md dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
           검색 결과가 없습니다.
         </div>
