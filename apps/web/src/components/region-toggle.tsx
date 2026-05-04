@@ -11,12 +11,16 @@ const LABELS: Record<Region, string> = {
 
 export function RegionToggle() {
   const region = useCart((s) => s.region);
+  const regionChosen = useCart((s) => s.regionChosen);
   const setRegion = useCart((s) => s.setRegion);
   const items = useCart((s) => s.items);
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  const display = hydrated ? region : 'domestic';
+  // 아직 picker 단계면 헤더 토글 숨김 (선택 충돌 방지)
+  if (!hydrated || !regionChosen) return null;
+
+  const display = region;
 
   const toggle = () => {
     const next: Region = region === 'domestic' ? 'overseas' : 'domestic';

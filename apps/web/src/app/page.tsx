@@ -1,7 +1,5 @@
 import Link from 'next/link';
-import { CartDrawer } from '@/components/cart-drawer';
-import { CartSearchBar } from '@/components/cart-search-bar';
-import { RegionAwareMap } from '@/components/region-aware-map';
+import { HomeBody } from '@/components/home-body';
 import { RegionToggle } from '@/components/region-toggle';
 import { signoutAction } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/server';
@@ -53,11 +51,7 @@ export default async function Home() {
           )}
         </div>
       </header>
-      <CartSearchBar />
-      <div className="relative flex-1">
-        <RegionAwareMap className="absolute inset-0" />
-        <CartDrawer />
-      </div>
+      <HomeBody />
     </div>
   );
 }

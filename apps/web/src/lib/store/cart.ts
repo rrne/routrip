@@ -10,6 +10,8 @@ type CartState = {
   lockedIds: string[];
   // 국내/해외 여행 모드. 지도/검색 provider 결정 (Kakao vs Google).
   region: Region;
+  // 사용자가 한 번이라도 region을 명시 선택했는지. false면 홈에서 picker 표시.
+  regionChosen: boolean;
   add: (spot: Spot) => void;
   remove: (spotId: string) => void;
   clear: () => void;
@@ -27,6 +29,7 @@ export const useCart = create<CartState>()(
       items: [],
       lockedIds: [],
       region: 'domestic',
+      regionChosen: false,
       add: (spot) =>
         set((s) => (s.items.some((i) => i.id === spot.id) ? s : { items: [...s.items, spot] })),
       remove: (spotId) =>
@@ -59,9 +62,16 @@ export const useCart = create<CartState>()(
             : { lockedIds: [...s.lockedIds, spotId] },
         ),
       isLocked: (spotId) => get().lockedIds.includes(spotId),
-      // region 변경 시 cart는 비움 (국내↔해외 spot이 섞이면 의미없음)
+      // 호출 시 항상 regionChosen=true. region이 실제로 바뀐 경우에만 cart 비움.
       setRegion: (region) =>
-        set((s) => (s.region === region ? s : { region, items: [], lockedIds: [] })),
+        set((s) => {
+          const changed = s.region !== region;
+          return {
+            region,
+            regionChosen: true,
+            ...(changed ? { items: [], lockedIds: [] } : {}),
+          };
+        }),
     }),
     {
       name: 'routrip-cart',
