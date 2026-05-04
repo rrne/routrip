@@ -48,7 +48,9 @@ function nearestNeighbor(spots: Spot[], startIndex: number): Spot[] {
   return ordered;
 }
 
-function twoOpt(spots: Spot[]): Spot[] {
+// lockedIndices가 주어지면, 그 위치를 reversal segment 안에 포함하는 후보는 스킵.
+// 잠긴 스팟의 위치를 항상 유지함.
+function twoOpt(spots: Spot[], lockedIndices?: Set<number>): Spot[] {
   if (spots.length < 4) return spots;
   let best = spots;
   let bestDist = totalDistance(best);
@@ -58,6 +60,16 @@ function twoOpt(spots: Spot[]): Spot[] {
     improved = false;
     for (let i = 1; i < best.length - 2; i++) {
       for (let j = i + 1; j < best.length - 1; j++) {
+        if (lockedIndices) {
+          let crossesLocked = false;
+          for (let k = i; k <= j; k++) {
+            if (lockedIndices.has(k)) {
+              crossesLocked = true;
+              break;
+            }
+          }
+          if (crossesLocked) continue;
+        }
         const candidate = [
           ...best.slice(0, i),
           ...best.slice(i, j + 1).reverse(),
@@ -93,12 +105,34 @@ export function buildRoute(spots: Spot[]): OptimizedRoute {
   };
 }
 
-// NN + 2-opt로 자동 최적화. 사용자가 "자동 정렬" 누를 때 사용.
-export function optimizeRoute(spots: Spot[], startSpotId?: string): OptimizedRoute {
+type OptimizeOptions = {
+  startSpotId?: string;
+  // 잠긴 스팟 ID. 주어지면 그 스팟들은 현재 위치(인덱스)에 고정됨.
+  // NN을 건너뛰고 입력 순서를 유지한 채 2-opt만 제약 있게 적용.
+  lockedSpotIds?: ReadonlyArray<string>;
+};
+
+// "자동 정렬" 액션. 락 없으면 NN+2opt, 있으면 입력 순서 + 제약 2-opt.
+export function optimizeRoute(spots: Spot[], options: OptimizeOptions = {}): OptimizedRoute {
   if (spots.length === 0) {
     return { spots: [], legs: [], totalDistanceMeters: 0 };
   }
-  const startIndex = startSpotId ? Math.max(0, spots.findIndex((s) => s.id === startSpotId)) : 0;
-  const ordered = twoOpt(nearestNeighbor(spots, startIndex));
+
+  const lockedSet = options.lockedSpotIds ? new Set(options.lockedSpotIds) : null;
+  const lockedIndices =
+    lockedSet && lockedSet.size > 0
+      ? new Set(spots.flatMap((s, i) => (lockedSet.has(s.id) ? [i] : [])))
+      : null;
+
+  let ordered: Spot[];
+  if (lockedIndices && lockedIndices.size > 0) {
+    // 락이 있으면 NN으로 재배치 못 함 (락 인덱스가 깨짐). 입력 순서로 시작 + 제약 2-opt.
+    ordered = twoOpt(spots, lockedIndices);
+  } else {
+    const startIndex = options.startSpotId
+      ? Math.max(0, spots.findIndex((s) => s.id === options.startSpotId))
+      : 0;
+    ordered = twoOpt(nearestNeighbor(spots, startIndex));
+  }
   return buildRoute(ordered);
 }

@@ -28,9 +28,11 @@ function defaultTripName(): string {
 export function RouteView({ user }: Props) {
   const router = useRouter();
   const items = useCart((s) => s.items);
+  const lockedIds = useCart((s) => s.lockedIds);
   const move = useCart((s) => s.move);
   const setItems = useCart((s) => s.setItems);
   const clearCart = useCart((s) => s.clear);
+  const toggleLock = useCart((s) => s.toggleLock);
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
@@ -50,7 +52,7 @@ export function RouteView({ user }: Props) {
 
   const handleAutoSort = () => {
     if (items.length < 2) return;
-    const optimized = optimizeRoute(items);
+    const optimized = optimizeRoute(items, { lockedSpotIds: lockedIds });
     setItems(optimized.spots);
   };
 
@@ -126,6 +128,7 @@ export function RouteView({ user }: Props) {
           <ol className="flex-1 overflow-y-auto px-4 py-2">
             {route.spots.map((spot, idx) => {
               const leg = route.legs[idx];
+              const locked = lockedIds.includes(spot.id);
               return (
                 <li key={spot.id}>
                   <div className="flex items-center gap-2 py-3">
@@ -141,6 +144,19 @@ export function RouteView({ user }: Props) {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center">
+                      <button
+                        type="button"
+                        onClick={() => toggleLock(spot.id)}
+                        aria-label={`${spot.name} ${locked ? '잠금 해제' : '위치 고정'}`}
+                        title={locked ? '잠금 해제' : '위치 고정'}
+                        className={
+                          locked
+                            ? 'rounded-md p-1 text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950'
+                            : 'rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300'
+                        }
+                      >
+                        {locked ? '🔒' : '🔓'}
+                      </button>
                       <button
                         type="button"
                         onClick={() => move(spot.id, 'up')}
