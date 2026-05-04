@@ -1,6 +1,7 @@
 'use client';
 
 import type { Region } from '@routrip/shared';
+import { Logo } from '@/components/logo';
 import { useCart } from '@/lib/store/cart';
 
 const OPTIONS: Array<{
@@ -19,8 +20,9 @@ export function RegionPicker() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-6 py-12">
       <div className="flex w-full flex-col items-center gap-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <div className="flex flex-col items-center text-center">
+          <Logo size={88} priority />
+          <h2 className="mt-6 text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
             어떤 여행이세요?
           </h2>
           <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">

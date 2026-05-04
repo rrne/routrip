@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Logo } from '@/components/logo';
 import { loginAction } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -31,8 +32,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-6 py-12">
       <div className="flex w-full flex-col gap-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <div className="flex flex-col items-center text-center">
+          <Logo size={72} priority />
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             routrip
           </h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">로그인해서 일정을 짜보세요</p>

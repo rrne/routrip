@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { EmailInput } from '@/components/email-input';
+import { Logo } from '@/components/logo';
 import { signupAction } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -16,8 +17,9 @@ export default async function SignupPage({ searchParams }: { searchParams: Searc
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-6 py-12">
       <div className="flex w-full flex-col gap-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <div className="flex flex-col items-center text-center">
+          <Logo size={72} priority />
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             회원가입
           </h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">routrip 시작하기</p>
