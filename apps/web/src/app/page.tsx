@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { CartDrawer } from '@/components/cart-drawer';
+import { CartSearchBar } from '@/components/cart-search-bar';
 import { KakaoMapView } from '@/components/kakao-map';
-import { SearchBar } from '@/components/search-bar';
 import { signoutAction } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -49,7 +49,7 @@ export default async function Home() {
           </Link>
         )}
       </header>
-      <SearchBar />
+      <CartSearchBar />
       <div className="relative flex-1">
         <KakaoMapView className="absolute inset-0" />
         <CartDrawer />
