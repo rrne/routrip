@@ -1,13 +1,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { Spot } from '@routrip/shared';
+import type { Region, Spot } from '@routrip/shared';
 import { buildRoute } from '@/lib/route/optimize';
 import { createClient } from '@/lib/supabase/server';
 
 type SaveTripInput = {
   name: string;
   spots: Spot[];
+  region: Region;
 };
 
 export async function saveTripAction(
@@ -50,6 +51,7 @@ export async function saveTripAction(
     .insert({
       user_id: userData.user.id,
       name: trimmedName,
+      region: input.region,
       total_distance_meters: Math.round(route.totalDistanceMeters),
       optimized_at: new Date().toISOString(),
     })

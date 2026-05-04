@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
-import type { Spot } from '@routrip/shared';
+import type { Region, Spot } from '@routrip/shared';
 import { SearchBar } from '@/components/search-bar';
 import { ShareSheet } from '@/components/share-sheet';
 import { buildRoute, optimizeRoute } from '@/lib/route/optimize';
@@ -15,6 +15,7 @@ type Props = {
   tripId: string;
   initialName: string;
   initialSpots: Spot[];
+  region: Region;
   members: Member[];
   currentUserId: string;
   isOwner: boolean;
@@ -43,6 +44,7 @@ export function TripDetailEditor({
   tripId,
   initialName,
   initialSpots,
+  region,
   members,
   currentUserId,
   isOwner,
@@ -142,7 +144,7 @@ export function TripDetailEditor({
         />
       </header>
 
-      <SearchBar onAdd={handleAdd} isAdded={isAdded} placeholder="장소 추가하기" />
+      <SearchBar onAdd={handleAdd} isAdded={isAdded} region={region} placeholder="장소 추가하기" />
 
       {route ? (
         <section className="border-b border-zinc-200 px-4 py-4 text-center dark:border-zinc-800">

@@ -29,6 +29,7 @@ export function RouteView({ user }: Props) {
   const router = useRouter();
   const items = useCart((s) => s.items);
   const lockedIds = useCart((s) => s.lockedIds);
+  const region = useCart((s) => s.region);
   const move = useCart((s) => s.move);
   const setItems = useCart((s) => s.setItems);
   const clearCart = useCart((s) => s.clear);
@@ -59,7 +60,7 @@ export function RouteView({ user }: Props) {
   const handleSave = () => {
     setError(null);
     startTransition(async () => {
-      const result = await saveTripAction({ name, spots: items });
+      const result = await saveTripAction({ name, spots: items, region });
       if (result.ok) {
         clearCart();
         router.push(`/trips/${result.tripId}`);

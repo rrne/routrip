@@ -1,19 +1,14 @@
 'use client';
 
-import type { Spot } from '@routrip/shared';
+import type { Region, Spot } from '@routrip/shared';
 import { loadKakaoMaps } from '@/lib/kakao/loader';
+import { searchPlacesGoogle } from './search-google';
 
 export type SearchResult =
   | { ok: true; spots: Spot[] }
   | { ok: false; error: string };
 
-// 카카오 Maps SDK의 services.Places로 클라이언트 사이드 검색.
-// REST 키 IP 화이트리스트가 아닌 JS 키 + 도메인 화이트리스트로 검증되므로
-// localhost와 Vercel(고정 IP 없음) 모두에서 동일하게 작동.
-export async function searchPlaces(query: string): Promise<SearchResult> {
-  const q = query.trim();
-  if (!q) return { ok: true, spots: [] };
-
+async function searchPlacesKakao(query: string): Promise<SearchResult> {
   let kakao;
   try {
     kakao = await loadKakaoMaps();
@@ -24,7 +19,7 @@ export async function searchPlaces(query: string): Promise<SearchResult> {
   return new Promise<SearchResult>((resolve) => {
     const places = new kakao.maps.services.Places();
     places.keywordSearch(
-      q,
+      query,
       (data, status) => {
         if (status === 'OK') {
           const spots: Spot[] = data.map((d) => ({
@@ -45,4 +40,14 @@ export async function searchPlaces(query: string): Promise<SearchResult> {
       { size: 15 },
     );
   });
+}
+
+// region에 따라 provider 분기 — 'domestic' = 카카오, 'overseas' = 구글.
+export async function searchPlaces(
+  query: string,
+  region: Region = 'domestic',
+): Promise<SearchResult> {
+  const q = query.trim();
+  if (!q) return { ok: true, spots: [] };
+  return region === 'overseas' ? searchPlacesGoogle(q) : searchPlacesKakao(q);
 }

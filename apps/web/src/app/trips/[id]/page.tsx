@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import type { Spot } from '@routrip/shared';
+import type { Region, Spot } from '@routrip/shared';
 import { TripDetailEditor } from '@/components/trip-detail-editor';
 import { createClient } from '@/lib/supabase/server';
 
@@ -20,6 +20,7 @@ export default async function TripDetailPage({ params }: { params: Params }) {
         id,
         name,
         user_id,
+        region,
         created_at,
         trip_spots (
           position,
@@ -64,6 +65,7 @@ export default async function TripDetailPage({ params }: { params: Params }) {
       tripId={data.id}
       initialName={data.name}
       initialSpots={initialSpots}
+      region={data.region as Region}
       members={members}
       currentUserId={userData.user.id}
       isOwner={isOwner}

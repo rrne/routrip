@@ -7,5 +7,6 @@ import { useCart } from '@/lib/store/cart';
 export function CartSearchBar() {
   const add = useCart((s) => s.add);
   const has = useCart((s) => s.has);
-  return <SearchBar onAdd={add} isAdded={has} />;
+  const region = useCart((s) => s.region);
+  return <SearchBar onAdd={add} isAdded={has} region={region} />;
 }

@@ -1,16 +1,27 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
-import type { Spot } from '@routrip/shared';
+import type { Region, Spot } from '@routrip/shared';
 import { searchPlaces } from '@/lib/places/search';
 
 type Props = {
   onAdd: (spot: Spot) => void;
   isAdded: (spotId: string) => boolean;
+  region?: Region;
   placeholder?: string;
 };
 
-export function SearchBar({ onAdd, isAdded, placeholder = '장소 검색 (예: 경복궁, 강남역, 명동)' }: Props) {
+export function SearchBar({
+  onAdd,
+  isAdded,
+  region = 'domestic',
+  placeholder,
+}: Props) {
+  const defaultPlaceholder =
+    region === 'overseas'
+      ? '장소 검색 (예: Tokyo Tower, Eiffel Tower)'
+      : '장소 검색 (예: 경복궁, 강남역, 명동)';
+  const finalPlaceholder = placeholder ?? defaultPlaceholder;
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Spot[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +39,7 @@ export function SearchBar({ onAdd, isAdded, placeholder = '장소 검색 (예: �
     }
     const handle = setTimeout(() => {
       startTransition(async () => {
-        const result = await searchPlaces(q);
+        const result = await searchPlaces(q, region);
         if (result.ok) {
           setResults(result.spots);
           setError(null);
@@ -39,7 +50,7 @@ export function SearchBar({ onAdd, isAdded, placeholder = '장소 검색 (예: �
       });
     }, 200);
     return () => clearTimeout(handle);
-  }, [query]);
+  }, [query, region]);
 
   // 바깥 클릭 시 결과 닫기
   useEffect(() => {
@@ -70,7 +81,7 @@ export function SearchBar({ onAdd, isAdded, placeholder = '장소 검색 (예: �
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder={placeholder}
+          placeholder={finalPlaceholder}
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
         />
       </div>

@@ -2,12 +2,14 @@
 
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import type { Spot } from '@routrip/shared';
+import type { Region, Spot } from '@routrip/shared';
 
 type CartState = {
   items: Spot[];
   // /route 페이지에서 잠근 스팟 id (자동 정렬 시 위치 유지). 새로고침해도 유지.
   lockedIds: string[];
+  // 국내/해외 여행 모드. 지도/검색 provider 결정 (Kakao vs Google).
+  region: Region;
   add: (spot: Spot) => void;
   remove: (spotId: string) => void;
   clear: () => void;
@@ -16,6 +18,7 @@ type CartState = {
   setItems: (items: Spot[]) => void;
   toggleLock: (spotId: string) => void;
   isLocked: (spotId: string) => boolean;
+  setRegion: (region: Region) => void;
 };
 
 export const useCart = create<CartState>()(
@@ -23,6 +26,7 @@ export const useCart = create<CartState>()(
     (set, get) => ({
       items: [],
       lockedIds: [],
+      region: 'domestic',
       add: (spot) =>
         set((s) => (s.items.some((i) => i.id === spot.id) ? s : { items: [...s.items, spot] })),
       remove: (spotId) =>
@@ -55,6 +59,9 @@ export const useCart = create<CartState>()(
             : { lockedIds: [...s.lockedIds, spotId] },
         ),
       isLocked: (spotId) => get().lockedIds.includes(spotId),
+      // region 변경 시 cart는 비움 (국내↔해외 spot이 섞이면 의미없음)
+      setRegion: (region) =>
+        set((s) => (s.region === region ? s : { region, items: [], lockedIds: [] })),
     }),
     {
       name: 'routrip-cart',

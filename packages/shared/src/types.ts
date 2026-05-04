@@ -1,3 +1,5 @@
+export type Region = 'domestic' | 'overseas';
+
 export type LatLng = {
   lat: number;
   lng: number;
