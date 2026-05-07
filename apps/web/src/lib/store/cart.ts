@@ -21,6 +21,7 @@ type CartState = {
   toggleLock: (spotId: string) => void;
   isLocked: (spotId: string) => boolean;
   setRegion: (region: Region) => void;
+  resetToRegionPicker: () => void;
 };
 
 export const useCart = create<CartState>()(
@@ -72,6 +73,7 @@ export const useCart = create<CartState>()(
             ...(changed ? { items: [], lockedIds: [] } : {}),
           };
         }),
+      resetToRegionPicker: () => set({ regionChosen: false, items: [], lockedIds: [] }),
     }),
     {
       name: 'routrip-cart',

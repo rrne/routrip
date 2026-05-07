@@ -9,7 +9,7 @@ type Props = {
 export function Logo({ size = 28, className = '', priority = false }: Props) {
   return (
     <Image
-      src="/routrip.png"
+      src="/logo.png"
       alt="routrip"
       width={size}
       height={size}

@@ -7,7 +7,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <HomeBody userEmail={data.user?.email ?? null} />
+      <HomeBody isLoggedIn={!!data.user} />
     </div>
   );
 }

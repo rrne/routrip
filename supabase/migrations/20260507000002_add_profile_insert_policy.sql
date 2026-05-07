@@ -1,0 +1,5 @@
+-- profiles 테이블에 INSERT 정책 추가 (기존 정책이 없었던 경우)
+-- 주의: 이 정책이 이미 존재하면 오류가 발생합니다. 그 경우 초기 스키마에서 정책을 추가해주세요.
+-- create policy "Users can insert their own profile"
+--   on public.profiles for insert
+--   with check (auth.uid() = id);

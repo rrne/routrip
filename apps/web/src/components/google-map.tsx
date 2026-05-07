@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { LatLng } from '@routrip/shared';
 import { loadGoogleMaps } from '@/lib/google/loader';
 import type { GoogleMap, GoogleMarker } from '@/lib/google/types';
+import { createMarkerSvg, svgToDataUrl } from '@/lib/marker-utils';
 import { useCart } from '@/lib/store/cart';
 
 type Props = {
@@ -19,11 +20,14 @@ export function GoogleMapView({ center = TOKYO, zoom = 13, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<GoogleMap | null>(null);
   const markersRef = useRef<Map<string, GoogleMarker>>(new Map());
+  const infoWindowRef = useRef<any>(null);
+  const tempMarkerRef = useRef<GoogleMarker | null>(null);
   const prevCountRef = useRef(0);
   const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const items = useCart((s) => s.items);
+  const add = useCart((s) => s.add);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +40,75 @@ export function GoogleMapView({ center = TOKYO, zoom = 13, className }: Props) {
           zoom,
           disableDefaultUI: false,
         });
+
+        // 지도 클릭 이벤트 - 임시 마커 생성
+        mapRef.current.addListener('click', async (e: any) => {
+          const location = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+
+          // 기존 임시 마커 제거
+          if (tempMarkerRef.current) {
+            tempMarkerRef.current.setMap(null);
+          }
+
+          const marker = new google.maps.Marker({
+            position: location,
+            map: mapRef.current,
+            icon: svgToDataUrl(createMarkerSvg('selected')),
+            title: '새로운 위치',
+          });
+
+          tempMarkerRef.current = marker;
+
+          // 주소 가져오기
+          const geocoder = new google.maps.Geocoder();
+          try {
+            const response = await geocoder.geocode({ location });
+            if (response.results && response.results.length > 0) {
+              const result = response.results[0];
+              const placeName = result.address_components[0]?.long_name || '새로운 위치';
+              const address = result.formatted_address;
+
+              // 기존 인포윈도우 제거
+              if (infoWindowRef.current) {
+                infoWindowRef.current.close();
+              }
+
+              // HTML 문자열로 콘텐츠 생성
+              const escapedPlace = placeName.replace(/"/g, '&quot;');
+              const escapedAddr = address.replace(/"/g, '&quot;');
+              const content = `<div style="background:white;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.15);min-width:140px;">
+                <div style="font-weight:700;color:#1a1a1a;margin-bottom:3px;">${escapedPlace}</div>
+                <div style="color:#666;font-size:10px;margin-bottom:10px;line-height:1.4;">${escapedAddr}</div>
+                <button onclick="window.__addSpot && window.__addSpot()" style="width:100%;padding:7px 8px;background:#1a1a1a;color:white;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;">담기</button>
+              </div>`;
+
+              // 새 인포윈도우
+              const infoWindow = new google.maps.InfoWindow({ content });
+              infoWindow.open(mapRef.current, marker);
+              infoWindowRef.current = infoWindow;
+
+              // 버튼 클릭 핸들러 설정
+              window.__addSpot = () => {
+                add({
+                  id: `spot-${Date.now()}`,
+                  name: placeName,
+                  address,
+                  location,
+                  category: 'user-added',
+                });
+                if (tempMarkerRef.current) {
+                  tempMarkerRef.current.setMap(null);
+                  tempMarkerRef.current = null;
+                }
+                infoWindow.close();
+                delete window.__addSpot;
+              };
+            }
+          } catch (error) {
+            console.error('Geocoding 실패:', error);
+          }
+        });
+
         setMapReady(true);
       })
       .catch((e: unknown) => {
@@ -46,7 +119,6 @@ export function GoogleMapView({ center = TOKYO, zoom = 13, className }: Props) {
     return () => {
       cancelled = true;
     };
-    // 최초 1회만 초기화. center/zoom 변경은 별도 effect에서 처리.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -85,6 +157,7 @@ export function GoogleMapView({ center = TOKYO, zoom = 13, className }: Props) {
           position: { lat: item.location.lat, lng: item.location.lng },
           map,
           title: item.name,
+          icon: svgToDataUrl(createMarkerSvg('selected')),
         });
         markers.set(item.id, marker);
       }
@@ -105,6 +178,9 @@ export function GoogleMapView({ center = TOKYO, zoom = 13, className }: Props) {
     return () => {
       for (const marker of markers.values()) marker.setMap(null);
       markers.clear();
+      if (tempMarkerRef.current) {
+        tempMarkerRef.current.setMap(null);
+      }
     };
   }, []);
 
