@@ -79,20 +79,16 @@ export function HomeBody({ isLoggedIn, initialUsername }: Props) {
             <Link
               href="/mypage"
               aria-label="내 정보"
-              className="flex cursor-pointer items-center gap-2 rounded-full px-3 py-1 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+              className="flex cursor-pointer items-center gap-1.5 rounded-full px-2 py-1 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
             >
               <svg
                 viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-5 w-5"
+                fill="currentColor"
+                className="h-4 w-4"
                 aria-hidden
               >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
+                <circle cx="12" cy="8" r="4" />
+                <path d="M12 14c-4.418 0-8 1.79-8 4v2h16v-2c0-2.21-3.582-4-8-4z" />
               </svg>
               {username && <span className="text-xs font-medium">{username}</span>}
             </Link>
