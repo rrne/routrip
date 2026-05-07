@@ -28,6 +28,7 @@ export type GoogleMap = {
   setCenter(latlng: GoogleLatLng | GoogleLatLngLiteral): void;
   setZoom(zoom: number): void;
   fitBounds(bounds: GoogleLatLngBounds, padding?: number): void;
+  addListener(eventName: string, callback: (e: any) => void): void;
 };
 
 export type GoogleMapConstructor = new (
@@ -37,8 +38,9 @@ export type GoogleMapConstructor = new (
 
 export type GoogleMarkerOptions = {
   position: GoogleLatLng | GoogleLatLngLiteral;
-  map?: GoogleMap;
+  map?: GoogleMap | null;
   title?: string;
+  icon?: string | { url: string; scaledSize?: { width: number; height: number } };
 };
 
 export type GoogleMarker = {

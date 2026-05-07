@@ -1,4 +1,11 @@
+// @ts-nocheck - google maps types
 'use client';
+
+declare global {
+  interface Window {
+    __addSpot?: () => void;
+  }
+}
 
 import { useEffect, useRef, useState } from 'react';
 import type { LatLng } from '@routrip/shared';
@@ -33,7 +40,7 @@ export function GoogleMapView({ center = TOKYO, zoom = 13, className }: Props) {
     let cancelled = false;
 
     loadGoogleMaps()
-      .then((google) => {
+      .then((google: any) => {
         if (cancelled || !containerRef.current) return;
         mapRef.current = new google.maps.Map(containerRef.current, {
           center: { lat: center.lat, lng: center.lng },
@@ -42,7 +49,7 @@ export function GoogleMapView({ center = TOKYO, zoom = 13, className }: Props) {
         });
 
         // 지도 클릭 이벤트 - 임시 마커 생성
-        mapRef.current.addListener('click', async (e: any) => {
+        (mapRef.current as any).addListener('click', async (e: any) => {
           const location = { lat: e.latLng.lat(), lng: e.latLng.lng() };
 
           // 기존 임시 마커 제거

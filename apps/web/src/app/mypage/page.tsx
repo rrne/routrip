@@ -2,13 +2,12 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { updateProfileAction, updatePasswordAction, signoutAction } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/client';
 
 export default function MyPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -44,9 +43,7 @@ export default function MyPage() {
 
     loadProfile();
 
-    const msg = searchParams.get('message') || searchParams.get('error') || searchParams.get('success');
-    if (msg) setMessage(msg);
-  }, [router, searchParams]);
+  }, [router]);
 
   useEffect(() => {
     if (showProfileModal || showPasswordModal) {

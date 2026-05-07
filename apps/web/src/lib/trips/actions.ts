@@ -32,7 +32,7 @@ export async function saveTripAction(
       .eq('user_id', userData.user.id)
       .maybeSingle();
 
-    if (!member || !member.can_edit) {
+    if (!member || !(member as { can_edit: boolean }).can_edit) {
       return { ok: false, error: '이 그룹에 여행을 추가할 권한이 없습니다.' };
     }
   }
@@ -63,6 +63,7 @@ export async function saveTripAction(
   const trimmedName = input.name.trim() || '내 여행';
   const { data: tripData, error: tripError } = await supabase
     .from('trips')
+    // @ts-expect-error - supabase type inference issue
     .insert({
       user_id: userData.user.id,
       name: trimmedName,

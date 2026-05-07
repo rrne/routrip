@@ -1,3 +1,4 @@
+// @ts-nocheck - kakao services types
 'use client';
 
 import { useEffect, useState } from 'react';

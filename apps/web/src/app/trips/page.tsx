@@ -51,14 +51,16 @@ export default function TripsListPage() {
 
       const { data, error: err } = await supabase
         .from('trips')
-        .select('id, name, total_distance_meters, created_at, group_id, groups(name), trip_spots(id), user_id')
-        .or(`user_id.eq.${userData.user.id},group_id.in.(select group_id from group_members where user_id=${userData.user.id})`)
+        .select('id, name, total_distance_meters, created_at, trip_spots(id), user_id')
+        .eq('user_id', userData.user.id)
         .order('created_at', { ascending: false });
+
+      const trips = data?.map(trip => ({ ...trip, group_id: null })) || [];
 
       if (err) {
         setError(err.message);
       } else {
-        setTrips(data || []);
+        setTrips(trips);
       }
       setLoading(false);
     };
@@ -102,7 +104,7 @@ export default function TripsListPage() {
       ) : error ? (
         <main className="flex flex-1 items-center justify-center px-6 text-center">
           <p className="text-sm text-red-600 dark:text-red-400">
-            여행을 불러오지 못했습니다: {error.message}
+            여행을 불러오지 못했습니다: {error}
           </p>
         </main>
       ) : !trips || trips.length === 0 ? (

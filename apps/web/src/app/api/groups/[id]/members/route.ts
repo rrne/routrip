@@ -26,7 +26,7 @@ export async function POST(
       return NextResponse.json({ error: '그룹을 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    if (group.owner_id !== user.user.id) {
+    if ((group as { owner_id: string }).owner_id !== user.user.id) {
       return NextResponse.json({ error: '그룹 owner만 멤버를 추가할 수 있습니다.' }, { status: 403 });
     }
 
@@ -55,6 +55,7 @@ export async function POST(
     // 멤버 추가
     const { data, error } = await supabase
       .from('group_members')
+      // @ts-expect-error - supabase type inference issue
       .insert([{ group_id: id, user_id: profile.id, can_edit: can_edit ?? false }])
       .select('id, user_id, can_edit, profiles:user_id(id, username)');
 

@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('groups')
+      // @ts-expect-error - supabase type inference issue
       .insert([{ owner_id: user.user.id, name: name.trim() }])
       .select();
 

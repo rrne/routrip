@@ -26,7 +26,7 @@ export async function PATCH(
       return NextResponse.json({ error: '그룹을 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    if (group.owner_id !== user.user.id) {
+    if ((group as { owner_id: string }).owner_id !== user.user.id) {
       return NextResponse.json({ error: '그룹 owner만 멤버 권한을 변경할 수 있습니다.' }, { status: 403 });
     }
 
@@ -38,6 +38,7 @@ export async function PATCH(
 
     const { data, error } = await supabase
       .from('group_members')
+      // @ts-expect-error - supabase type inference issue
       .update({ can_edit })
       .eq('group_id', id)
       .eq('user_id', userId)
@@ -84,7 +85,7 @@ export async function DELETE(
     }
 
     // owner이거나 자신을 제거하는 경우만 허용
-    if (group.owner_id !== user.user.id && user.user.id !== userId) {
+    if ((group as { owner_id: string }).owner_id !== user.user.id && user.user.id !== userId) {
       return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
     }
 

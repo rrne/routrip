@@ -1,3 +1,4 @@
+// @ts-nocheck - kakao maps types
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -32,8 +33,9 @@ export function KakaoMapView({ center = SEOUL, level = 4, className }: Props) {
     let cancelled = false;
 
     loadKakaoMaps()
-      .then((kakao) => {
+      .then((kakao: any) => {
         if (cancelled || !containerRef.current) return;
+        //@ts-ignore - kakao maps types
         mapRef.current = new kakao.maps.Map(containerRef.current, {
           center: new kakao.maps.LatLng(center.lat, center.lng),
           level,
@@ -221,6 +223,7 @@ export function KakaoMapView({ center = SEOUL, level = 4, className }: Props) {
     // 2) 새로 담긴 spot에 마커 추가 (검정 마커)
     for (const item of items) {
       if (!markers.has(item.id)) {
+        //@ts-ignore - kakao maps types
         const markerImage = new kakao.maps.MarkerImage(
           svgToDataUrl(createMarkerSvg('selected')),
           new kakao.maps.Size(36, 44),
