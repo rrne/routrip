@@ -91,8 +91,8 @@ export function HomeBody({ isLoggedIn, initialUsername }: Props) {
                 className="h-5 w-5"
                 aria-hidden
               >
-                <path d="M18 20a6 6 0 0 0-12 0" />
-                <circle cx="12" cy="8" r="4" />
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
               </svg>
               {username && <span className="text-xs font-medium">{username}</span>}
             </Link>
