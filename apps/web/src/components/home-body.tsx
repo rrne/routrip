@@ -72,6 +72,15 @@ export function HomeBody({ isLoggedIn }: Props) {
         </button>
         <div className="flex shrink-0 items-center gap-2">
           <RegionToggle />
+          {isLoggedIn && (
+            <Link
+              href="/groups"
+              aria-label="그룹"
+              className="rounded-md px-3 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+            >
+              그룹
+            </Link>
+          )}
           {isLoggedIn ? (
             <Link
               href="/mypage"
