@@ -56,7 +56,7 @@ export async function POST(
     const { data, error } = await supabase
       .from('group_members')
       .insert([{ group_id: id, user_id: profile.id, can_edit: can_edit ?? false }])
-      .select('*, profiles!group_members_user_id_fkey(username)');
+      .select('id, user_id, can_edit, profiles:user_id(id, username)');
 
     if (error) {
       if (error.code === '23505') {

@@ -41,7 +41,7 @@ export async function PATCH(
       .update({ can_edit })
       .eq('group_id', id)
       .eq('user_id', userId)
-      .select('*, profiles!group_members_user_id_fkey(username)');
+      .select('id, user_id, can_edit, profiles:user_id(id, username)');
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

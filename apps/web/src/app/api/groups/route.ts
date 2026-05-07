@@ -46,7 +46,7 @@ export async function GET() {
     // RLS가 자동으로 필터링 (owner인 그룹 + 멤버인 그룹만 반환)
     const { data, error } = await supabase
       .from('groups')
-      .select('*, group_members(id, user_id, can_edit, profiles!group_members_user_id_fkey(username))')
+      .select('id, name, owner_id, created_at, group_members(id, user_id, can_edit, profiles:user_id(id, username))')
       .order('created_at', { ascending: false });
 
     if (error) {

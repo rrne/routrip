@@ -17,7 +17,7 @@ export async function GET(
 
     const { data, error } = await supabase
       .from('groups')
-      .select('*, group_members(id, user_id, can_edit, profiles!group_members_user_id_fkey(username))')
+      .select('id, name, owner_id, created_at, group_members(id, user_id, can_edit, profiles:user_id(id, username))')
       .eq('id', id)
       .maybeSingle();
 
