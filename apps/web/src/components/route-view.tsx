@@ -42,13 +42,29 @@ export function RouteView({ user }: Props) {
 
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState('');
+  const [groupId, setGroupId] = useState<string | null>(null);
+  const [groups, setGroups] = useState<Array<{ id: string; name: string }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const startNaming = () => {
+  const startNaming = async () => {
     setName(defaultTripName());
     setError(null);
+    setGroupId(null);
     setNaming(true);
+
+    // 사용자 그룹 목록 로드
+    if (user) {
+      try {
+        const res = await fetch('/api/groups');
+        if (res.ok) {
+          const data = await res.json();
+          setGroups(data.map((g: any) => ({ id: g.id, name: g.name })));
+        }
+      } catch {
+        // 그룹 로드 실패해도 개인 여행은 가능
+      }
+    }
   };
 
   const handleAutoSort = () => {
@@ -60,7 +76,7 @@ export function RouteView({ user }: Props) {
   const handleSave = () => {
     setError(null);
     startTransition(async () => {
-      const result = await saveTripAction({ name, spots: items, region });
+      const result = await saveTripAction({ name, spots: items, region, groupId: groupId ?? undefined });
       if (result.ok) {
         clearCart();
         router.push(`/trips/${result.tripId}`);
@@ -205,6 +221,20 @@ export function RouteView({ user }: Props) {
                   autoFocus
                   className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
                 />
+                {groups.length > 0 && (
+                  <select
+                    value={groupId ?? ''}
+                    onChange={(e) => setGroupId(e.target.value || null)}
+                    className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  >
+                    <option value="">개인 여행</option>
+                    {groups.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.name} (그룹)
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <div className="flex gap-2">
                   <button
                     type="button"

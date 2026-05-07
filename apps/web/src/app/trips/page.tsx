@@ -19,9 +19,21 @@ function formatDate(iso: string): string {
   return `${yyyy}.${mm}.${dd}`;
 }
 
+interface Trip {
+  id: string;
+  name: string;
+  total_distance_meters: number | null;
+  created_at: string;
+  group_id: string | null;
+  groups?: { name: string };
+  trip_spots: { id: string }[];
+  user_id: string;
+}
+
 export default function TripsListPage() {
   const router = useRouter();
-  const [trips, setTrips] = useState<any[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,9 +47,12 @@ export default function TripsListPage() {
         return;
       }
 
+      setCurrentUserId(userData.user.id);
+
       const { data, error: err } = await supabase
         .from('trips')
-        .select('id, name, total_distance_meters, created_at, trip_spots(id)')
+        .select('id, name, total_distance_meters, created_at, group_id, groups(name), trip_spots(id), user_id')
+        .or(`user_id.eq.${userData.user.id},group_id.in.(select group_id from group_members where user_id=${userData.user.id})`)
         .order('created_at', { ascending: false });
 
       if (err) {
@@ -62,14 +77,22 @@ export default function TripsListPage() {
           ←
         </button>
         <h1 className="flex-1 text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          내 여행
+          여행
         </h1>
-        <Link
-          href="/"
-          className="rounded-md px-3 py-1 text-xs font-medium text-zinc-900 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800"
-        >
-          + 새 여행
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/groups"
+            className="rounded-md px-3 py-1 text-xs font-medium text-zinc-900 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800"
+          >
+            그룹
+          </Link>
+          <Link
+            href="/"
+            className="rounded-md px-3 py-1 text-xs font-medium text-zinc-900 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800"
+          >
+            + 새 여행
+          </Link>
+        </div>
       </header>
 
       {loading ? (
@@ -103,9 +126,16 @@ export default function TripsListPage() {
                 className="flex items-center justify-between gap-3 px-4 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-900"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                    {trip.name}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      {trip.name}
+                    </p>
+                    {trip.group_id && (
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded dark:bg-blue-900 dark:text-blue-200">
+                        {trip.groups?.name || '그룹'}
+                      </span>
+                    )}
+                  </div>
                   <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                     {formatDate(trip.created_at)} · {trip.trip_spots.length}개 장소 ·{' '}
                     {formatDistance(trip.total_distance_meters)}

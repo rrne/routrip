@@ -9,6 +9,7 @@ type SaveTripInput = {
   name: string;
   spots: Spot[];
   region: Region;
+  groupId?: string;
 };
 
 export async function saveTripAction(
@@ -21,6 +22,20 @@ export async function saveTripAction(
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return { ok: false, error: '로그인이 필요합니다.' };
+
+  // 그룹 여행이면 권한 확인
+  if (input.groupId) {
+    const { data: member } = await supabase
+      .from('group_members')
+      .select('can_edit')
+      .eq('group_id', input.groupId)
+      .eq('user_id', userData.user.id)
+      .maybeSingle();
+
+    if (!member || !member.can_edit) {
+      return { ok: false, error: '이 그룹에 여행을 추가할 권한이 없습니다.' };
+    }
+  }
 
   // 사용자가 정한 순서를 그대로 저장 — 거리만 다시 계산해서 신뢰 (client 값 미신뢰).
   const route = buildRoute(input.spots);
@@ -52,6 +67,7 @@ export async function saveTripAction(
       user_id: userData.user.id,
       name: trimmedName,
       region: input.region,
+      group_id: input.groupId ?? null,
       total_distance_meters: Math.round(route.totalDistanceMeters),
       optimized_at: new Date().toISOString(),
     })
