@@ -13,40 +13,19 @@ import { createClient } from '@/lib/supabase/client';
 
 type Props = {
   isLoggedIn: boolean;
+  initialUsername?: string | null;
 };
 
 // 첫 방문엔 picker만 (헤더 X), 선택 후엔 헤더 + 지도/장바구니.
-export function HomeBody({ isLoggedIn }: Props) {
+export function HomeBody({ isLoggedIn, initialUsername }: Props) {
   const regionChosen = useCart((s) => s.regionChosen);
   const resetToRegionPicker = useCart((s) => s.resetToRegionPicker);
   const [hydrated, setHydrated] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(initialUsername ?? null);
 
   useEffect(() => {
     setHydrated(true);
-
-    // 프로필 로드
-    if (isLoggedIn) {
-      const loadProfile = async () => {
-        const supabase = await createClient();
-        const { data: user } = await supabase.auth.getUser();
-
-        if (user.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', user.user.id)
-            .single();
-
-          if (profile?.username) {
-            setUsername(profile.username);
-          }
-        }
-      };
-
-      loadProfile();
-    }
-  }, [isLoggedIn]);
+  }, []);
 
   if (!hydrated) {
     return <div className="flex-1" />;
