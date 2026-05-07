@@ -43,14 +43,14 @@ export async function GET() {
       return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
     }
 
-    // 내가 owner인 그룹 + 내가 멤버인 그룹
+    // RLS가 자동으로 필터링 (owner인 그룹 + 멤버인 그룹만 반환)
     const { data, error } = await supabase
       .from('groups')
       .select('*, group_members(id, user_id, can_edit, profiles!group_members_user_id_fkey(username))')
-      .or(`owner_id.eq.${user.user.id},id.in.(select group_id from group_members where user_id=${user.user.id})`)
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error('그룹 목록 조회 Supabase 에러:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
