@@ -4,6 +4,7 @@
 declare global {
   interface Window {
     __addSpot?: () => void;
+    __closeSpotInfo?: () => void;
   }
 }
 
@@ -72,7 +73,16 @@ export function GoogleMapView({ center = TOKYO, zoom = 13, className }: Props) {
             const response = await geocoder.geocode({ location });
             if (response.results && response.results.length > 0) {
               const result = response.results[0];
-              const placeName = result.address_components[0]?.long_name || '새로운 위치';
+              const comps = result.address_components || [];
+              const findComp = (...types: string[]) =>
+                comps.find((c: any) => types.some((t) => c.types.includes(t)))?.long_name;
+
+              const placeName =
+                findComp('point_of_interest', 'establishment', 'premise') ||
+                findComp('sublocality_level_2', 'sublocality_level_1', 'sublocality') ||
+                findComp('locality') ||
+                findComp('administrative_area_level_1') ||
+                '선택한 위치';
               const address = result.formatted_address;
 
               // 기존 인포윈도우 제거
@@ -80,19 +90,35 @@ export function GoogleMapView({ center = TOKYO, zoom = 13, className }: Props) {
                 infoWindowRef.current.close();
               }
 
-              // HTML 문자열로 콘텐츠 생성
+              // HTML 문자열로 콘텐츠 생성 (absolute 닫기 버튼)
               const escapedPlace = placeName.replace(/"/g, '&quot;');
               const escapedAddr = address.replace(/"/g, '&quot;');
-              const content = `<div style="background:white;border-radius:8px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.15);min-width:140px;">
-                <div style="font-weight:700;color:#1a1a1a;margin-bottom:3px;">${escapedPlace}</div>
-                <div style="color:#666;font-size:10px;margin-bottom:10px;line-height:1.4;">${escapedAddr}</div>
-                <button onclick="window.__addSpot && window.__addSpot()" style="width:100%;padding:7px 8px;background:#1a1a1a;color:white;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;">담기</button>
+              const content = `<div style="position:relative;padding:4px 4px 4px 4px;min-width:160px;max-width:240px;">
+                <button onclick="window.__closeSpotInfo && window.__closeSpotInfo()" aria-label="닫기" style="position:absolute;top:2px;right:2px;width:20px;height:20px;background:transparent;color:#999;border:none;outline:none;border-radius:4px;cursor:pointer;font-size:16px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;font-weight:300;transition:background 0.15s;-webkit-tap-highlight-color:transparent;" onmouseover="this.style.background='#f3f4f6';this.style.color='#1a1a1a'" onmouseout="this.style.background='transparent';this.style.color='#999'" onfocus="this.style.outline='none';this.style.boxShadow='none'">×</button>
+                <div style="font-weight:600;color:#1a1a1a;margin-bottom:4px;font-size:14px;line-height:1.3;padding-right:22px;">${escapedPlace}</div>
+                <div style="color:#666;font-size:11px;margin-bottom:10px;line-height:1.4;word-break:keep-all;">${escapedAddr}</div>
+                <button onclick="window.__addSpot && window.__addSpot()" style="width:100%;padding:6px 8px;background:#1a1a1a;color:white;border:none;outline:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;-webkit-tap-highlight-color:transparent;" onfocus="this.style.outline='none';this.style.boxShadow='none'">담기</button>
               </div>`;
 
-              // 새 인포윈도우
-              const infoWindow = new google.maps.InfoWindow({ content });
-              infoWindow.open(mapRef.current, marker);
+              // 새 인포윈도우 (헤더 비활성화로 빈 여백 제거)
+              const infoWindow = new google.maps.InfoWindow({
+                content,
+                headerDisabled: true,
+                pixelOffset: new google.maps.Size(0, -4),
+              });
+              infoWindow.open({ map: mapRef.current, anchor: marker });
               infoWindowRef.current = infoWindow;
+
+              // 닫기 핸들러 설정 (마커도 함께 제거)
+              window.__closeSpotInfo = () => {
+                if (tempMarkerRef.current) {
+                  tempMarkerRef.current.setMap(null);
+                  tempMarkerRef.current = null;
+                }
+                infoWindow.close();
+                delete window.__addSpot;
+                delete window.__closeSpotInfo;
+              };
 
               // 버튼 클릭 핸들러 설정
               window.__addSpot = () => {
@@ -109,6 +135,7 @@ export function GoogleMapView({ center = TOKYO, zoom = 13, className }: Props) {
                 }
                 infoWindow.close();
                 delete window.__addSpot;
+                delete window.__closeSpotInfo;
               };
             }
           } catch (error) {
