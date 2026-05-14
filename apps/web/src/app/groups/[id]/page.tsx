@@ -26,7 +26,8 @@ interface Trip {
   id: string;
   name: string;
   region: 'domestic' | 'overseas';
-  trip_date: string | null;
+  start_date: string | null;
+  end_date: string | null;
   total_distance_meters: number | null;
   optimized_at: string | null;
   created_at: string;
@@ -49,6 +50,17 @@ function formatDistance(meters: number | null): string {
   if (meters == null) return '거리 미산정';
   if (meters < 1000) return `${Math.round(meters)} m`;
   return `${(meters / 1000).toFixed(1)} km`;
+}
+
+function formatDateRange(start: string | null, end: string | null): string | null {
+  const f = (d: string) => {
+    const date = new Date(d);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  };
+  if (start && end) return start === end ? f(start) : `${f(start)} – ${f(end)}`;
+  if (start) return f(start);
+  if (end) return f(end);
+  return null;
 }
 
 export default function GroupDetailPage() {
@@ -348,7 +360,8 @@ export default function GroupDetailPage() {
                         </p>
                         <p className="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-500">
                           {trip.region === 'domestic' ? '국내' : '해외'}
-                          {trip.trip_date && ` · ${new Date(trip.trip_date).toLocaleDateString('ko-KR')}`}
+                          {formatDateRange(trip.start_date, trip.end_date) &&
+                            ` · ${formatDateRange(trip.start_date, trip.end_date)}`}
                           {' · '}
                           {formatDistance(trip.total_distance_meters)}
                         </p>

@@ -73,7 +73,8 @@ export type Database = {
           user_id: string;
           name: string;
           region: 'domestic' | 'overseas';
-          trip_date: string | null;
+          start_date: string | null;
+          end_date: string | null;
           total_distance_meters: number | null;
           optimized_at: string | null;
           created_at: string;
@@ -84,7 +85,8 @@ export type Database = {
           user_id: string;
           name?: string;
           region?: 'domestic' | 'overseas';
-          trip_date?: string | null;
+          start_date?: string | null;
+          end_date?: string | null;
           total_distance_meters?: number | null;
           optimized_at?: string | null;
           created_at?: string;
@@ -95,7 +97,8 @@ export type Database = {
           user_id?: string;
           name?: string;
           region?: 'domestic' | 'overseas';
-          trip_date?: string | null;
+          start_date?: string | null;
+          end_date?: string | null;
           total_distance_meters?: number | null;
           optimized_at?: string | null;
           created_at?: string;

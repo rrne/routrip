@@ -36,3 +36,9 @@ button:not(:disabled),
   background-position: center;
   background-repeat: no-repeat;
 }
+
+/* 값이 비어있을 때는 native date input 의 "----. --. --." 영역을 통째로 숨김.
+   사용자는 캘린더 picker 로 날짜를 선택, 값이 들어오면 .date-empty 가 빠지면서 자동으로 보임. */
+.date-empty::-webkit-datetime-edit {
+  opacity: 0;
+}

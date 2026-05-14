@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { DateRangePicker } from '@/components/date-range-picker';
+import { Select } from '@/components/select';
 import { buildRoute, optimizeRoute } from '@/lib/route/optimize';
 import { useCart } from '@/lib/store/cart';
 import { saveTripAction } from '@/lib/trips/actions';
@@ -22,7 +24,7 @@ function defaultTripName(): string {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd} 여행`;
+  return `${yyyy}-${mm}-${dd} 여정`;
 }
 
 export function RouteView({ user }: Props) {
@@ -42,15 +44,32 @@ export function RouteView({ user }: Props) {
 
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [groupId, setGroupId] = useState<string | null>(null);
-  const [groups, setGroups] = useState<Array<{ id: string; name: string }>>([]);
+  const [groups, setGroups] = useState<
+    Array<{ id: string; name: string; cover_image_url: string | null }>
+  >([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // 기간 미리보기 ( N박 / 당일치기 )
+  const stayLabel = useMemo(() => {
+    if (!startDate || !endDate) return null;
+    if (startDate > endDate) return null;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diff = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return '당일치기';
+    return `${diff}박 ${diff + 1}일`;
+  }, [startDate, endDate]);
 
   const startNaming = async () => {
     setName(defaultTripName());
     setError(null);
     setGroupId(null);
+    setStartDate('');
+    setEndDate('');
     setNaming(true);
 
     // 사용자 그룹 목록 로드
@@ -59,7 +78,13 @@ export function RouteView({ user }: Props) {
         const res = await fetch('/api/groups');
         if (res.ok) {
           const data = await res.json();
-          setGroups(data.map((g: any) => ({ id: g.id, name: g.name })));
+          setGroups(
+            data.map((g: any) => ({
+              id: g.id,
+              name: g.name,
+              cover_image_url: g.cover_image_url ?? null,
+            })),
+          );
         }
       } catch {
         // 그룹 로드 실패해도 개인 여행은 가능
@@ -75,8 +100,19 @@ export function RouteView({ user }: Props) {
 
   const handleSave = () => {
     setError(null);
+    if (startDate && endDate && startDate > endDate) {
+      setError('종료일이 시작일보다 빠를 수 없습니다.');
+      return;
+    }
     startTransition(async () => {
-      const result = await saveTripAction({ name, spots: items, region, groupId: groupId ?? undefined });
+      const result = await saveTripAction({
+        name,
+        spots: items,
+        region,
+        groupId: groupId ?? undefined,
+        startDate: startDate || null,
+        endDate: endDate || null,
+      });
       if (result.ok) {
         clearCart();
         router.push(`/trips/${result.tripId}`);
@@ -116,7 +152,7 @@ export function RouteView({ user }: Props) {
           </svg>
         </Link>
         <h1 className="flex-1 text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          여행 경로
+          여정
         </h1>
         {route && (
           <button
@@ -179,36 +215,35 @@ export function RouteView({ user }: Props) {
                         title={locked ? '잠금 해제' : '위치 고정'}
                         className={
                           locked
-                            ? 'rounded-md p-1 text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950'
-                            : 'rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300'
+                            ? 'rounded-md p-1 text-[#134e5e] hover:bg-zinc-100 dark:text-[#7fb5c4] dark:hover:bg-zinc-800'
+                            : 'rounded-md p-1 text-zinc-300 hover:bg-zinc-100 hover:text-zinc-600 dark:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-400'
                         }
                       >
-                        {locked ? '🔒' : '🔓'}
+                        {locked ? <LockIcon /> : <UnlockIcon />}
                       </button>
                       <button
                         type="button"
                         onClick={() => move(spot.id, 'up')}
                         disabled={idx === 0}
                         aria-label={`${spot.name} 위로`}
-                        className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                        className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-20 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
                       >
-                        ↑
+                        <ChevronUpIcon />
                       </button>
                       <button
                         type="button"
                         onClick={() => move(spot.id, 'down')}
                         disabled={idx === route.spots.length - 1}
                         aria-label={`${spot.name} 아래로`}
-                        className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                        className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-20 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
                       >
-                        ↓
+                        <ChevronDownIcon />
                       </button>
                     </div>
                   </div>
                   {leg && (
-                    <div className="ml-3.5 flex items-center gap-2 border-l border-dashed border-zinc-300 py-1 pl-6 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                      <span>↓</span>
-                      <span>{formatDistance(leg.distanceMeters)}</span>
+                    <div className="ml-3.5 border-l border-dashed border-zinc-300 py-1 pl-6 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                      {formatDistance(leg.distanceMeters)}
                     </div>
                   )}
                 </li>
@@ -228,24 +263,28 @@ export function RouteView({ user }: Props) {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="여행 이름"
+                  placeholder="여정 이름"
                   autoFocus
-                  className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-[#134e5e] focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
                 />
                 {groups.length > 0 && (
-                  <select
-                    value={groupId ?? ''}
-                    onChange={(e) => setGroupId(e.target.value || null)}
-                    className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-                  >
-                    <option value="">개인 여행</option>
-                    {groups.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name} (그룹)
-                      </option>
-                    ))}
-                  </select>
+                  <GroupSelectRow
+                    groupId={groupId}
+                    groups={groups}
+                    onChange={(v) => setGroupId(v || null)}
+                  />
                 )}
+                <DateRangePicker
+                  startDate={startDate}
+                  endDate={endDate}
+                  onChange={(s, e) => {
+                    setStartDate(s);
+                    setEndDate(e);
+                  }}
+                />
+                <p className="text-right text-[11px] text-zinc-500 dark:text-zinc-400">
+                  {stayLabel ?? '기간을 정하지 않으면 비워두세요'}
+                </p>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -295,5 +334,180 @@ export function RouteView({ user }: Props) {
         </>
       )}
     </div>
+  );
+}
+
+type GroupOption = { id: string; name: string; cover_image_url: string | null };
+
+function GroupSelectRow({
+  groupId,
+  groups,
+  onChange,
+}: {
+  groupId: string | null;
+  groups: GroupOption[];
+  onChange: (value: string) => void;
+}) {
+  const selectedGroup = groupId ? groups.find((g) => g.id === groupId) : null;
+  return (
+    <Select
+      value={groupId ?? ''}
+      onChange={onChange}
+      ariaLabel="여정 그룹"
+      leading={<GroupAvatar group={selectedGroup} />}
+      options={[
+        { value: '', label: '개인 여정', icon: <PersonIcon /> },
+        ...groups.map((g) => ({
+          value: g.id,
+          label: g.name,
+          icon: <UsersIcon />,
+        })),
+      ]}
+    />
+  );
+}
+
+function PersonIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="h-3.5 w-3.5"
+    >
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function UsersIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="h-3.5 w-3.5"
+    >
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function GroupAvatar({ group }: { group: GroupOption | null | undefined }) {
+  if (!group) {
+    return (
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+          className="h-3.5 w-3.5"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      </span>
+    );
+  }
+  const letter = group.name.trim().charAt(0).toUpperCase() || '?';
+  return (
+    <span className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#134e5e] to-[#71b280] text-[10px] font-bold text-white">
+      {group.cover_image_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={group.cover_image_url}
+          alt={group.name}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        letter
+      )}
+    </span>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="h-4 w-4"
+    >
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+  );
+}
+
+function UnlockIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="h-4 w-4"
+    >
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 7.5-2" />
+    </svg>
+  );
+}
+
+function ChevronUpIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="h-4 w-4"
+    >
+      <path d="M18 15l-6-6-6 6" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="h-4 w-4"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
   );
 }

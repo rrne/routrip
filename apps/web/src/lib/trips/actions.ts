@@ -10,6 +10,8 @@ type SaveTripInput = {
   spots: Spot[];
   region: Region;
   groupId?: string;
+  startDate?: string | null;
+  endDate?: string | null;
 };
 
 export async function saveTripAction(
@@ -69,6 +71,8 @@ export async function saveTripAction(
       name: trimmedName,
       region: input.region,
       group_id: input.groupId ?? null,
+      start_date: input.startDate || null,
+      end_date: input.endDate || null,
       total_distance_meters: Math.round(route.totalDistanceMeters),
       optimized_at: new Date().toISOString(),
     })
@@ -105,6 +109,8 @@ type UpdateTripInput = {
   tripId: string;
   name: string;
   spots: Spot[];
+  startDate?: string | null;
+  endDate?: string | null;
 };
 
 export async function updateTripAction(
@@ -138,13 +144,15 @@ export async function updateTripAction(
 
   const placeIdToSpotId = new Map(spotsData.map((s) => [s.kakao_place_id, s.id]));
 
-  // 2) trip 메타 갱신 (이름, 총거리). RLS로 collaborator/owner만 가능.
+  // 2) trip 메타 갱신 (이름, 총거리, 기간). RLS로 collaborator/owner만 가능.
   const trimmedName = input.name.trim() || '내 여행';
   const { error: tripError } = await supabase
     .from('trips')
     .update({
       name: trimmedName,
       total_distance_meters: Math.round(route.totalDistanceMeters),
+      ...(input.startDate !== undefined ? { start_date: input.startDate || null } : {}),
+      ...(input.endDate !== undefined ? { end_date: input.endDate || null } : {}),
     })
     .eq('id', input.tripId);
   if (tripError) return { ok: false, error: `여행 갱신 실패: ${tripError.message}` };

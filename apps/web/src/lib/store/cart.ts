@@ -78,6 +78,12 @@ export const useCart = create<CartState>()(
     {
       name: 'routrip-cart',
       storage: createJSONStorage(() => localStorage),
+      // lockedIds 는 세션 단위 편집 상태 — 새로고침 시 항상 unlocked 로 시작.
+      partialize: (s) => ({
+        items: s.items,
+        region: s.region,
+        regionChosen: s.regionChosen,
+      }),
     },
   ),
 );

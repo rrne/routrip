@@ -22,6 +22,8 @@ export default async function TripDetailPage({ params }: { params: Params }) {
         user_id,
         region,
         created_at,
+        start_date,
+        end_date,
         trip_spots (
           position,
           spots (
@@ -70,6 +72,8 @@ export default async function TripDetailPage({ params }: { params: Params }) {
       currentUserId={userData.user.id}
       isOwner={isOwner}
       createdAt={data.created_at}
+      initialStartDate={data.start_date}
+      initialEndDate={data.end_date}
     />
   );
 }

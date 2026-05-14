@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
 import type { Region, Spot } from '@routrip/shared';
+import { DateRangePicker } from '@/components/date-range-picker';
 import { SearchBar } from '@/components/search-bar';
 import { ShareSheet } from '@/components/share-sheet';
 import { buildRoute, optimizeRoute } from '@/lib/route/optimize';
@@ -20,6 +21,8 @@ type Props = {
   currentUserId: string;
   isOwner: boolean;
   createdAt: string;
+  initialStartDate: string | null;
+  initialEndDate: string | null;
 };
 
 function formatDistance(meters: number): string {
@@ -49,10 +52,14 @@ export function TripDetailEditor({
   currentUserId,
   isOwner,
   createdAt,
+  initialStartDate,
+  initialEndDate,
 }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [spots, setSpots] = useState<Spot[]>(initialSpots);
+  const [startDate, setStartDate] = useState<string>(initialStartDate ?? '');
+  const [endDate, setEndDate] = useState<string>(initialEndDate ?? '');
   const [lockedIds, setLockedIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -62,7 +69,11 @@ export function TripDetailEditor({
 
   const route = useMemo(() => (spots.length >= 2 ? buildRoute(spots) : null), [spots]);
 
-  const isDirty = name !== initialName || !sameSpots(spots, initialSpots);
+  const isDirty =
+    name !== initialName ||
+    !sameSpots(spots, initialSpots) ||
+    startDate !== (initialStartDate ?? '') ||
+    endDate !== (initialEndDate ?? '');
 
   const handleAdd = (spot: Spot) => {
     setSpots((prev) => (prev.some((s) => s.id === spot.id) ? prev : [...prev, spot]));
@@ -87,12 +98,24 @@ export function TripDetailEditor({
   const handleCancel = () => {
     setName(initialName);
     setSpots(initialSpots);
+    setStartDate(initialStartDate ?? '');
+    setEndDate(initialEndDate ?? '');
     setError(null);
   };
   const handleSave = () => {
     setError(null);
+    if (startDate && endDate && startDate > endDate) {
+      setError('종료일이 시작일보다 빠를 수 없습니다.');
+      return;
+    }
     startTransition(async () => {
-      const result = await updateTripAction({ tripId, name, spots });
+      const result = await updateTripAction({
+        tripId,
+        name,
+        spots,
+        startDate: startDate || null,
+        endDate: endDate || null,
+      });
       if (result.ok) {
         router.refresh();
       } else {
@@ -101,7 +124,7 @@ export function TripDetailEditor({
     });
   };
   const handleDelete = () => {
-    if (!confirm('이 여행을 삭제할까요? 되돌릴 수 없습니다.')) return;
+    if (!confirm('이 여정을 삭제할까요? 되돌릴 수 없습니다.')) return;
     setError(null);
     startTransition(async () => {
       const result = await deleteTripAction(tripId);
@@ -118,7 +141,7 @@ export function TripDetailEditor({
       <header className="flex items-center gap-3 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
         <Link
           href="/trips"
-          aria-label="여행 목록으로"
+          aria-label="여정 목록으로"
           className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
         >
           <svg
@@ -139,7 +162,7 @@ export function TripDetailEditor({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="여행 이름"
+            placeholder="여정 이름"
             className="w-full truncate bg-transparent text-lg font-semibold tracking-tight text-zinc-900 placeholder:text-zinc-400 focus:outline-none dark:text-zinc-50"
           />
           <p className="text-xs text-zinc-500 dark:text-zinc-500">
@@ -156,6 +179,17 @@ export function TripDetailEditor({
       </header>
 
       <SearchBar onAdd={handleAdd} isAdded={isAdded} region={region} placeholder="장소 추가하기" />
+
+      <section className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onChange={(s, e) => {
+            setStartDate(s);
+            setEndDate(e);
+          }}
+        />
+      </section>
 
       {route ? (
         <section className="border-b border-zinc-200 px-4 py-4 text-center dark:border-zinc-800">
@@ -208,29 +242,29 @@ export function TripDetailEditor({
                       title={locked ? '잠금 해제' : '위치 고정'}
                       className={
                         locked
-                          ? 'rounded-md p-1 text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950'
-                          : 'rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300'
+                          ? 'rounded-md p-1 text-[#134e5e] hover:bg-zinc-100 dark:text-[#7fb5c4] dark:hover:bg-zinc-800'
+                          : 'rounded-md p-1 text-zinc-300 hover:bg-zinc-100 hover:text-zinc-600 dark:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-400'
                       }
                     >
-                      {locked ? '🔒' : '🔓'}
+                      {locked ? <LockIcon /> : <UnlockIcon />}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleMove(spot.id, 'up')}
                       disabled={idx === 0}
                       aria-label={`${spot.name} 위로`}
-                      className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                      className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-20 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
                     >
-                      ↑
+                      <ChevronUpIcon />
                     </button>
                     <button
                       type="button"
                       onClick={() => handleMove(spot.id, 'down')}
                       disabled={idx === spots.length - 1}
                       aria-label={`${spot.name} 아래로`}
-                      className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                      className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-20 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
                     >
-                      ↓
+                      <ChevronDownIcon />
                     </button>
                     <button
                       type="button"
@@ -238,14 +272,25 @@ export function TripDetailEditor({
                       aria-label={`${spot.name} 제거`}
                       className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
                     >
-                      ✕
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                        className="h-4 w-4"
+                      >
+                        <path d="M18 6L6 18" />
+                        <path d="M6 6l12 12" />
+                      </svg>
                     </button>
                   </div>
                 </div>
                 {leg && (
-                  <div className="ml-3.5 flex items-center gap-2 border-l border-dashed border-zinc-300 py-1 pl-6 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                    <span>↓</span>
-                    <span>{formatDistance(leg.distanceMeters)}</span>
+                  <div className="ml-3.5 border-l border-dashed border-zinc-300 py-1 pl-6 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                    {formatDistance(leg.distanceMeters)}
                   </div>
                 )}
               </li>
@@ -285,7 +330,7 @@ export function TripDetailEditor({
               href="/trips"
               className="flex-1 rounded-lg border border-zinc-300 px-4 py-2.5 text-center text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
             >
-              내 여행 목록
+              내 여정 목록
             </Link>
             {isOwner && (
               <button
@@ -301,5 +346,75 @@ export function TripDetailEditor({
         )}
       </div>
     </div>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="h-4 w-4"
+    >
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+  );
+}
+
+function UnlockIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="h-4 w-4"
+    >
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 7.5-2" />
+    </svg>
+  );
+}
+
+function ChevronUpIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="h-4 w-4"
+    >
+      <path d="M18 15l-6-6-6 6" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="h-4 w-4"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
   );
 }

@@ -52,7 +52,7 @@ export async function GET(
     // 3) 이 그룹의 여행 목록
     const { data: trips, error: tripsError } = await supabase
       .from('trips')
-      .select('id, name, region, trip_date, total_distance_meters, optimized_at, created_at')
+      .select('id, name, region, start_date, end_date, total_distance_meters, optimized_at, created_at')
       .eq('group_id', id)
       .order('created_at', { ascending: false });
 
@@ -106,7 +106,8 @@ export async function GET(
           id: string;
           name: string;
           region: string;
-          trip_date: string | null;
+          start_date: string | null;
+          end_date: string | null;
           total_distance_meters: number | null;
           optimized_at: string | null;
           created_at: string;
