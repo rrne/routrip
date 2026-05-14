@@ -90,9 +90,10 @@ export async function GET(
     }
 
     // 5) 응답 조립
+    const groupObj = group as unknown as Record<string, unknown>;
     const response = {
-      id: typedGroup.owner_id ? (group as { id: string }).id : id,
-      ...group,
+      ...groupObj,
+      id: ((group as { id?: string }).id ?? id),
       owner: profilesMap[typedGroup.owner_id] ?? { id: typedGroup.owner_id, username: null },
       members: typedGroup.group_members.map((m) => ({
         id: m.id,

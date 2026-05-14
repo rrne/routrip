@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '코드를 입력해주세요.' }, { status: 400 });
     }
 
+    // @ts-expect-error - join_group_by_code 함수는 db types 에 아직 반영되지 않음
     const { data, error } = await supabase.rpc('join_group_by_code', { p_code: code });
 
     if (error) {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const row = (data as Array<{ group_id: string; already_member: boolean }> | null)?.[0];
+    const row = (data as unknown as Array<{ group_id: string; already_member: boolean }> | null)?.[0];
     if (!row) {
       return NextResponse.json({ error: '가입 처리에 실패했어요.' }, { status: 500 });
     }

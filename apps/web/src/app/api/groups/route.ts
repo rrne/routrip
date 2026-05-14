@@ -98,13 +98,24 @@ export async function GET() {
       return NextResponse.json({ error: groupsError.message }, { status: 500 });
     }
 
-    if (!groups || groups.length === 0) {
+    type GroupRow = {
+      id: string;
+      name: string;
+      owner_id: string;
+      created_at: string;
+      cover_image_url?: string | null;
+      description?: string | null;
+      group_members?: Array<{ id: string; user_id: string; can_edit: boolean }>;
+    };
+    const typedGroups = (groups ?? []) as unknown as GroupRow[];
+
+    if (typedGroups.length === 0) {
       return NextResponse.json([]);
     }
 
     const userIds = Array.from(
       new Set(
-        groups.flatMap((g) => g.group_members?.map((m) => m.user_id) ?? []),
+        typedGroups.flatMap((g) => g.group_members?.map((m) => m.user_id) ?? []),
       ),
     );
 
@@ -122,7 +133,7 @@ export async function GET() {
       }
     }
 
-    const result = groups.map((g) => ({
+    const result = typedGroups.map((g) => ({
       ...g,
       group_members: (g.group_members ?? []).map((m) => ({
         ...m,
