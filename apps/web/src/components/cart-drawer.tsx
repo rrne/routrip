@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { RegionToggle } from '@/components/region-toggle';
 import { useCart } from '@/lib/store/cart';
 
 export function CartDrawer() {
@@ -19,6 +20,7 @@ export function CartDrawer() {
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-10 border-t border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
+      <RegionToggle className="absolute right-4 bottom-full mb-3" />
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

@@ -1,6 +1,31 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
+// 현재 로그인한 사용자 프로필
+export async function GET() {
+  try {
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 });
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .eq('id', userData.user.id)
+      .maybeSingle();
+    return NextResponse.json({
+      id: userData.user.id,
+      username: (profile as { username: string | null } | null)?.username ?? null,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : '알 수 없는 오류' },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();

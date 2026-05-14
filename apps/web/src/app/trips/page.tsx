@@ -76,7 +76,18 @@ export default function TripsListPage() {
           aria-label="뒤로가기"
           className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
         >
-          ←
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+            className="h-5 w-5"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
         </button>
         <h1 className="flex-1 text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           여행

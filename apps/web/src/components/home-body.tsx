@@ -7,7 +7,6 @@ import { CartSearchBar } from '@/components/cart-search-bar';
 import { Logo } from '@/components/logo';
 import { RegionAwareMap } from '@/components/region-aware-map';
 import { RegionPicker } from '@/components/region-picker';
-import { RegionToggle } from '@/components/region-toggle';
 import { useCart } from '@/lib/store/cart';
 import { createClient } from '@/lib/supabase/client';
 
@@ -50,7 +49,6 @@ export function HomeBody({ isLoggedIn, initialUsername }: Props) {
           </h1>
         </button>
         <div className="flex shrink-0 items-center gap-2">
-          <RegionToggle />
           {isLoggedIn && (
             <Link
               href="/groups"

@@ -63,7 +63,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
               type="checkbox"
               name="remember"
               defaultChecked
-              className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900"
+              className="routrip-check h-[18px] w-[18px] shrink-0 cursor-pointer appearance-none rounded-md border border-zinc-300 bg-white transition-colors checked:border-[#134e5e] checked:bg-[#134e5e] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#134e5e]/30 dark:border-zinc-700 dark:bg-zinc-900"
             />
             자동 로그인
           </label>

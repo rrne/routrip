@@ -121,7 +121,18 @@ export function TripDetailEditor({
           aria-label="여행 목록으로"
           className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
         >
-          ←
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+            className="h-5 w-5"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
         </Link>
         <div className="min-w-0 flex-1">
           <input
