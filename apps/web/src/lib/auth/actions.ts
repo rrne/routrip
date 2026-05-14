@@ -76,7 +76,7 @@ export async function signoutAction(): Promise<void> {
   await supabase.auth.signOut();
   await clearSessionMarker();
   revalidatePath('/', 'layout');
-  redirect('/login');
+  redirect('/');
 }
 
 // 프로필이 없으면 먼저 생성 (INSERT 시도)
