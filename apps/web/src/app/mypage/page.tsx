@@ -4,16 +4,24 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateProfileAction, updatePasswordAction, signoutAction } from '@/lib/auth/actions';
+import { useCart } from '@/lib/store/cart';
 import { createClient } from '@/lib/supabase/client';
 
 export default function MyPage() {
   const router = useRouter();
+  const resetToRegionPicker = useCart((s) => s.resetToRegionPicker);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+  const handleSignout = async () => {
+    // 로그아웃 직전에 region picker 로 초기화 — 로그아웃 후 홈 진입 시 메인부터
+    resetToRegionPicker();
+    await signoutAction();
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -184,14 +192,15 @@ export default function MyPage() {
         </button>
 
         {/* 로그아웃 */}
-        <form action={signoutAction} className="mt-auto">
+        <div className="mt-auto">
           <button
-            type="submit"
+            type="button"
+            onClick={handleSignout}
             className="cursor-pointer w-full rounded-xl border border-zinc-300 px-5 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
           >
             로그아웃
           </button>
-        </form>
+        </div>
       </main>
 
       {/* 닉네임 변경 모달 */}
